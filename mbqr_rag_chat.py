@@ -1,7 +1,7 @@
 # ------------------------------------------------------ #
 #
 #   mbqr_rag_chat.py
-#   Simone J. Skeen (08-10-2025)
+#   Simone J. Skeen (08-11-2025)
 #   WIP - NOT FOR DISTRIBUTION
 #
 # ------------------------------------------------------ #
@@ -69,7 +69,10 @@ system_prompt = '''
     '''
 
 prompt_template = PromptTemplate(
-    input_variables = ['context', 'question'],
+    input_variables = [
+        'context', 
+        'question',
+        ],
     template = '''
         {system_prompt}
 
@@ -90,8 +93,6 @@ def query_and_stream_ui(
     retriever, 
     query, 
     prompt_template, 
-    blink_icons = None, 
-    blink_interval = 0.2,
     ):
 
     '''
@@ -102,30 +103,24 @@ def query_and_stream_ui(
     - retriever: pre-specfied (external) vector store retriever
     - query: user question
     - prompt_template: optional PromptTemplate (context + question)
-    - blink_icons: icon / emoji to display while (hidden) reasoning tokens are processed
-    - blink_interval: blink rate
     '''
-
-    if blink_icons is None:
-        blink_icons = ["🔮", " "] ### toggles emoji / blank
 
     docs = retriever.invoke(query)
     context = "\n\n".join(doc.page_content for doc in docs)
     prompt = prompt_template.format(
         context = context,
-        question = query)
+        question = query,
+        )
+
+    # streaming state
 
     visible = True
     buffer = ""
     lower_buf = ""
-
     START_TAG = '<think>'
     END_TAG = '</think>'
 
-    # iterator for blinking icons
-
-    blink_cycle = itertools.cycle(blink_icons)
-    last_blink_time = time.time()
+    # mask reasoning trace
 
     for token in llm.stream(prompt):
 
@@ -140,47 +135,44 @@ def query_and_stream_ui(
 
                 # scan for START_TAG
 
-                idx = lower_buf.find(START_TAG)
-                if idx == -1:
+                i = lower_buf.find(START_TAG)
+                if i == -1:
 
-                    # no START_TAG; emit everything safely
+                    # no START_TAG - emit
 
                     out.append(buffer)
                     buffer = ""
                     lower_buf = ""
                     break
+
                 else:
 
-                    # emit text before <think>, then enter hidden mode
+                    # emit to tag, enter hidden mode
 
-                    out.append(buffer[:idx])
-
-                    # drop up to end of start tag from buffers
-
-                    tag_end = idx + len(START_TAG)
-                    buffer = buffer[tag_end:]
-                    lower_buf = lower_buf[tag_end:]
+                    out.append(buffer[:i])
+                    j = i + len(START_TAG)
+                    buffer = buffer[j:]
+                    lower_buf = lower_buf[j:]
                     visible = False
+                    yield "__HIDDEN_ON__"
             else:
 
-                # currently hiding; scan for END_TAG
+                # in hidden mode - scan for END_TAG
 
-                idx = lower_buf.find(END_TAG)
-                if idx == -1:
-
-                    # haven't seen </think> yet; keep hiding
-
-                    buffer = buffer[-32:] ### keep buffers small while hiding
-                    lower_buf = lower_buf[-32:]
+                i = lower_buf.find(END_TAG)
+                if i == -1:
+                    buffer = buffer[-64:]
+                    lower_buf = lower_buf[-64:]
                     break
                 else:
 
-                    # drop hidden content up to end of </think>, then resume visible
+                    # drop hidden content until END_TAG + resume visible mode
 
-                    tag_end = idx + len(END_TAG)
-                    buffer = buffer[tag_end:]
-                    lower_buf = lower_buf[tag_end:]
+                    j = i + len(END_TAG)
+                    buffer = buffer[j:]
+                    lower_buf = lower_buf[j:]
                     visible = True
+                    yield "__HIDDEN_OFF__"
 
         # stream accumulated visible text
 
@@ -245,25 +237,53 @@ for user_q, assistant_r in st.session_state.chat_history:
 # on new query
 
 if user_input:
-    st.chat_message('user').markdown(user_input)
-    with st.chat_message('assistant'):
+    with st.chat_message("user"):
+        st.markdown(user_input)
+
+    with st.chat_message("assistant"):
         response_container = st.empty()
-        streamed_tokens = ""
+        visible_text = ""
+        hidden = False ### are we inside <think>…</think>?
 
-        # stream w/ blinking cursor effect
 
-        for chunk in query_and_stream_ui(llm, retriever, user_input, prompt_template):
-            streamed_tokens += chunk
-            response_container.markdown(streamed_tokens + "▍")
-            time.sleep(0.015)
+        for part in query_and_stream_ui(llm, retriever, user_input, prompt_template):
 
-        # final (static) display w/o cursor
-        response_container.markdown(streamed_tokens)
+            # sentinel events
 
-        # w/o cursor effect (below)...
+            if part == "__HIDDEN_ON__":
+                hidden = True
 
-#        for chunk in query_and_stream_ui(llm, retriever, user_input, prompt_template):
-#            streamed_tokens += chunk
-#            response_container.markdown(streamed_tokens)
+                # render once with "_Generating..._"
 
-#        st.session_state.chat_history.append((user_input, streamed_tokens))
+                response_container.markdown(visible_text + " _Generating..._")
+                continue
+            if part == "__HIDDEN_OFF__":
+                hidden = False
+
+                # revert to cursor-on streaming immediately
+
+                response_container.markdown(visible_text + "▍")
+                continue
+
+            # normal visible tokens
+
+            visible_text += part
+
+            # during visible streaming, show cursor "▍" 
+
+            if not hidden:
+                response_container.markdown(visible_text + "▍")
+                time.sleep(0.015)
+            else:
+
+                # still hidden - display "_Generating..._"
+
+                response_container.markdown(visible_text + " _Generating..._")
+
+        # drop cursor on completion
+
+        response_container.markdown(visible_text)
+
+    # store (optional: save the final visible_text instead of "(see above)")
+    
+    st.session_state.chat_history.append((user_input, visible_text))
