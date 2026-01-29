@@ -1,0 +1,12 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+
+# Credentials
+credentials.toml
+
+# FAISS vector store (regenerable)
+src/faiss_index/
