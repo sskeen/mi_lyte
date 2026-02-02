@@ -62,7 +62,7 @@ system_prompt = '''
     - You maintain a sixth-grade reading level in your responses. 
     - Do not assume the user is LGBTQ+
     - Do not reason for more than 100 tokens.
-    - You are concise: you limit responses to 200 words.
+    - You are concise: you limit responses to 100 words.
     - If prompted for an inspiring quote, curate from the poetry in your context.
     - Refer to your context as your "mindfulness knowledge." Do NOT refer to your "context."
     - At the close of each response, encourage the user to practice the recommended skill.
@@ -211,10 +211,11 @@ with st.sidebar:
     st.subheader('Accessible mindfulness skills for everyday life')
     st.write("\n\n")
     st.write("\n\n")
-    img = Image.open('mheal_logo.png')
+    url = "https://github.com/sskeen/mi_lyte/blob/main/images/mheal_logo.png?raw=true"
+#    img = Image.open('mheal_logo.png')
 #    new_size = (300, 120)
 #    img = img.resize(new_size)
-    st.image(img, width = 120)
+    st.image(url, output_format = "PNG", width = 120)
     st.caption("A prototype developed by [mHEAL: the Mindfulness for Health Equity Lab](https://sites.brown.edu/mheal/) at Brown University, grounded in _Mindfulness-Based Queer Resilience_ © Dr. Shufang Sun. ")
 
 # initialize chat Hx
