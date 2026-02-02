@@ -7,82 +7,32 @@
 # ------------------------------------------------------ #
 
 import itertools, streamlit as st, time
-from langchain_core.prompts import PromptTemplate
-from langchain_core.documents import Document
 from langchain_community.llms import Ollama
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import OllamaEmbeddings
 from PIL import Image
 
+from config import LLM_PARAMS, EMBEDDING_MODEL, RETRIEVER_PARAMS, PROMPT_TEMPLATE
+
 # load vector index + retriever
 
 embedding = OllamaEmbeddings(
-    model = 'nomic-embed-text',
+    model = EMBEDDING_MODEL,
     )
 db = FAISS.load_local(
     'faiss_index',
     embeddings = embedding,
     allow_dangerous_deserialization = True,
     )
-retriever = db.as_retriever(
-    search_type = 'similarity',
-    search_kwargs = {'k': 4},
-    )
+retriever = db.as_retriever(**RETRIEVER_PARAMS)
 
 # config llm via ollama
 
-llm = Ollama(
-    model = 'deepseek-r1:14b', ### model tag for app: 'deepseek-v2' (16b); for dx / reasoning: 'deepseek-r1:14b' (14b)
-    base_url = 'http://localhost:11434',
-    temperature = 0.6, ### args / params: https://api.python.langchain.com/en/latest/llms/langchain_community.llms.ollama.Ollama.html
-    mirostat_eta = 0.1,
-    mirostat_tau = 5.0,
-    top_p = 0.9,
-    top_k = 40,
-    num_ctx = 2048, 
-    num_gpu = 1,
-    num_predict = 768, 
-    repeat_last_n = 64,
-    stop = None,
-    )
+llm = Ollama(**LLM_PARAMS)
 
 # config prompt
 
-system_prompt = '''
-    Your name is "mī lyte." You have access to very high quality evidence-based mindfulness skills instruction in your provided context. 
-    You will be prompted with everyday stressors and problems. Your task is to:
-    
-        1.) search your provided context,
-        2.) summarize in-context knowledge on stress and resilience,
-        3.) recommend specific skills and practices that might benefit the user _given_ their reported stressors.
-        
-    - ALWAYS consult your context first when responding. 
-    - NEVER return recommendations from sources other than your context. 
-    - You are warm, empowering, and prioritize empathy in your tone and response contents. 
-    - You maintain a sixth-grade reading level in your responses. 
-    - Do not assume the user is LGBTQ+
-    - Do not reason for more than 100 tokens.
-    - You are concise: you limit responses to 100 words.
-    - If prompted for an inspiring quote, curate from the poetry in your context.
-    - Refer to your context as your "mindfulness knowledge." Do NOT refer to your "context."
-    - At the close of each response, encourage the user to practice the recommended skill.
-    '''
-
-prompt_template = PromptTemplate(
-    input_variables = [
-        'context', 
-        'question',
-        ],
-    template = '''
-        {system_prompt}
-
-        Context:
-        {context}
-
-        Question:
-        {question}
-        '''.strip(),
-            ).partial(system_prompt = system_prompt)
+prompt_template = PROMPT_TEMPLATE
 
 # query_and_stream_ui
 
@@ -274,7 +224,7 @@ if user_input:
 
             if not hidden:
                 response_container.markdown(visible_text + "▍")
-                time.sleep(0.015)
+                time.sleep(0.005)
             else:
 
                 # still hidden - display "_Generating..._"
