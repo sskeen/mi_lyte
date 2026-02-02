@@ -7,6 +7,7 @@ numpy
 pandas
 Pillow
 pydantic==2.6.4
+python-dotenv
 pymupdf
 pypdf
 streamlit
