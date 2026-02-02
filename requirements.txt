@@ -1,0 +1,13 @@
+chromadb
+faiss-cpu
+langchain
+langchain-community
+langchain-core
+numpy
+pandas
+Pillow
+pydantic==2.6.4
+pymupdf
+pypdf
+streamlit
+tiktoken
