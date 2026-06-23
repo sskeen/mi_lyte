@@ -19,6 +19,12 @@ BASE_DIR = Path(__file__).parent
 PIPELINE_CONFIG = {
     'num_queries': 10,              # Queries to generate per persona/seed/model combo
     'avg_query_length_tokens': 50,  # Target token length for generated queries
+    'random_seed': 56,              # Random seed for reproducibility
+}
+
+# Rate limiting (OpenAI API)
+RATE_LIMIT_CONFIG = {
+    'delay_seconds': 1.0,           # Delay between OpenAI API calls
 }
 
 # OpenAI configuration
@@ -27,6 +33,7 @@ OPENAI_CONFIG = {
     'temperature': 0.8,
     'max_tokens': 150,
     'reasoning_effort': 'medium',   # low, medium, high
+    'seed': PIPELINE_CONFIG['random_seed'],
 }
 
 # Ollama configuration
@@ -36,6 +43,7 @@ OLLAMA_CONFIG = {
     'temperature': 0.8,
     'num_predict': 150,
     'think': True,                  # Enable Qwen3 thinking mode
+    'seed': PIPELINE_CONFIG['random_seed'],
 }
 
 # File paths

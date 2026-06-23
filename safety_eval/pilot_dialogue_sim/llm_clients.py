@@ -4,15 +4,19 @@
 #
 #   LLM client wrappers for OpenAI and Ollama.
 #   Creates fresh client instances per generation call.
+#   Includes rate limiting and random seed support.
 #
 #   Simone J. Skeen x Claude Code (06-23-2026)
 #
 # ------------------------------------------------------ #
 
+import re
+import time
+
 from openai import OpenAI
 from ollama import Client as OllamaClient
 
-from config import OPENAI_CONFIG, OLLAMA_CONFIG
+from config import OPENAI_CONFIG, OLLAMA_CONFIG, RATE_LIMIT_CONFIG
 
 
 def get_openai_response(prompt: str, config: dict = None) -> dict:
@@ -42,7 +46,12 @@ def get_openai_response(prompt: str, config: dict = None) -> dict:
         temperature=cfg['temperature'],
         max_tokens=cfg['max_tokens'],
         reasoning_effort=cfg['reasoning_effort'],
+        seed=cfg.get('seed'),
     )
+
+    # Rate limiting: delay after each call to avoid throttling
+    delay = RATE_LIMIT_CONFIG.get('delay_seconds', 1.0)
+    time.sleep(delay)
 
     return {
         'text': response.choices[0].message.content,
@@ -78,6 +87,7 @@ def get_ollama_response(prompt: str, config: dict = None) -> dict:
         options={
             'temperature': cfg['temperature'],
             'num_predict': cfg['num_predict'],
+            'seed': cfg.get('seed', 56),
         },
         think=cfg.get('think', False),
     )
@@ -86,7 +96,6 @@ def get_ollama_response(prompt: str, config: dict = None) -> dict:
     text = response.get('response', '')
     if cfg.get('think') and '<think>' in text:
         # Strip thinking section from output
-        import re
         text = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL).strip()
 
     return {
