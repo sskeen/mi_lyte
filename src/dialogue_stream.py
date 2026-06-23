@@ -1,5 +1,6 @@
 
 from langchain_core.prompts import PromptTemplate
+import ollama
 
 def query_and_stream(
     llm,
@@ -7,6 +8,7 @@ def query_and_stream(
     query,
     prompt_template = None,
     show_sources = True,
+    show_thinking = False,
     ):
 
     '''
@@ -18,6 +20,7 @@ def query_and_stream(
     - query: user question
     - prompt_template: optional PromptTemplate (context + question)
     - show_sources: determines whether to print the source documents after the answer
+    - show_thinking: if True, uses native ollama library to expose reasoning trace (think=True)
     '''
 
     # define PromptTemplate if none is passed
@@ -62,12 +65,45 @@ def query_and_stream(
     # stream response token-by-token
 
     print("\n🍂\n")
-    for token in llm.stream(prompt):
-        print(
-            token, 
-            end = "", 
-            flush = True,
+
+    if show_thinking:
+
+        # use native ollama library to expose reasoning trace
+
+        model_name = llm.model if hasattr(llm, 'model') else 'deepseek-r1:14b'
+
+        stream = ollama.chat(
+            model = model_name,
+            messages = [{'role': 'user', 'content': prompt}],
+            think = True,
+            stream = True,
             )
+
+        in_thinking = False
+
+        for chunk in stream:
+            if chunk.message.thinking and not in_thinking:
+                in_thinking = True
+                print('<think>\n', end = '')
+
+            if chunk.message.thinking:
+                print(chunk.message.thinking, end = '', flush = True)
+            elif chunk.message.content:
+                if in_thinking:
+                    print('\n</think>\n\n', end = '')
+                    in_thinking = False
+                print(chunk.message.content, end = '', flush = True)
+
+    else:
+
+        # use langchain wrapper (no thinking trace)
+
+        for token in llm.stream(prompt):
+            print(
+                token,
+                end = "",
+                flush = True,
+                )
 
     print("\n\n🍂")
 
