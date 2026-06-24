@@ -12,6 +12,7 @@
 
 import csv
 import json
+import re
 import argparse
 from datetime import datetime
 from pathlib import Path
@@ -56,13 +57,46 @@ def load_seed_phrases(filepath: Path) -> list[dict]:
     return seeds
 
 
-def load_persona_context(filepath: Path) -> str:
-    """Load persona context from text file."""
+def load_persona_contexts(filepath: Path) -> dict[str, str]:
+    """
+    Load persona-specific contexts from a single text file.
+
+    Parses sections delimited by headers matching:
+    'Additional socio-cultural context for {persona_id = PXXX}:'
+
+    Returns
+    -------
+    dict
+        Mapping of persona_id to its context string
+    """
     with open(filepath, 'r', encoding='utf-8') as f:
-        return f.read().strip()
+        content = f.read()
+
+    # Pattern to match persona headers and capture persona_id
+    header_pattern = r'Additional socio-cultural context for \{persona_id = (P\d+)\}:'
+
+    # Find all headers and their positions
+    matches = list(re.finditer(header_pattern, content))
+
+    if not matches:
+        raise ValueError(
+            "No persona context headers found. Expected format: "
+            "'Additional socio-cultural context for {persona_id = PXXX}:'"
+        )
+
+    contexts = {}
+    for i, match in enumerate(matches):
+        persona_id = match.group(1)
+        start = match.end()
+        # End at next header or end of file
+        end = matches[i + 1].start() if i + 1 < len(matches) else len(content)
+        context_text = content[start:end].strip()
+        contexts[persona_id] = context_text
+
+    return contexts
 
 
-def validate_inputs(personas: list, seeds: list, context: str) -> bool:
+def validate_inputs(personas: list, seeds: list, contexts: dict) -> bool:
     """
     Validate input data structure.
 
@@ -77,8 +111,8 @@ def validate_inputs(personas: list, seeds: list, context: str) -> bool:
     if not seeds:
         raise ValueError("No seed phrases loaded from TSV")
 
-    if not context:
-        raise ValueError("Persona context is empty")
+    if not contexts:
+        raise ValueError("No persona contexts loaded")
 
     persona_cols = set(personas[0].keys())
     if not required_persona_cols.issubset(persona_cols):
@@ -96,6 +130,13 @@ def validate_inputs(personas: list, seeds: list, context: str) -> bool:
         if seed['persona_id'] not in persona_ids:
             raise ValueError(
                 f"Seed {seed['seed_id']} references unknown persona: {seed['persona_id']}"
+            )
+
+    # Validate each persona has a context
+    for persona_id in persona_ids:
+        if persona_id not in contexts:
+            raise ValueError(
+                f"Persona {persona_id} has no context in persona_context.txt"
             )
 
     return True
@@ -181,13 +222,13 @@ def run_pipeline(dry_run: bool = False, skip_cost_confirm: bool = False):
     print("Loading input data...")
     personas = load_personas(INPUT_FILES['personas'])
     seeds = load_seed_phrases(INPUT_FILES['seed_phrases'])
-    context = load_persona_context(INPUT_FILES['persona_context'])
+    contexts = load_persona_contexts(INPUT_FILES['persona_context'])
 
     print("Validating inputs...")
-    validate_inputs(personas, seeds, context)
+    validate_inputs(personas, seeds, contexts)
     print(f"  Loaded {len(personas)} personas")
     print(f"  Loaded {len(seeds)} seed phrases")
-    print(f"  Context length: {len(context)} characters")
+    print(f"  Loaded {len(contexts)} persona contexts")
 
     # Build generation tasks
     models = ['openai', 'ollama']
@@ -254,11 +295,12 @@ def run_pipeline(dry_run: bool = False, skip_cost_confirm: bool = False):
             skipped += 1
             continue
 
-        # Build prompt
+        # Build prompt with persona-specific context
+        persona_context = contexts[persona['persona_id']]
         prompt = build_prompt(
             persona=persona,
             seed_phrase=seed['seed_phrase'],
-            persona_context=context,
+            persona_context=persona_context,
             target_tokens=target_tokens,
         )
 
