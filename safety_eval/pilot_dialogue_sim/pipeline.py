@@ -280,7 +280,6 @@ def run_pipeline(dry_run: bool = False, skip_cost_confirm: bool = False):
     init_output_file(output_path)
 
     # Run generation
-    target_tokens = PIPELINE_CONFIG['avg_query_length_tokens']
     skipped = 0
 
     for task in tqdm(tasks, desc="Generating queries"):
@@ -304,7 +303,6 @@ def run_pipeline(dry_run: bool = False, skip_cost_confirm: bool = False):
             persona=persona,
             seed_phrase=seed['seed_phrase'],
             persona_context=persona_context,
-            target_tokens=target_tokens,
         )
 
         # Generate

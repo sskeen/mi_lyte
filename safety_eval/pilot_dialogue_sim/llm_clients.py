@@ -12,6 +12,29 @@
 
 import re
 import time
+import unicodedata
+
+
+def normalize_text(text: str) -> str:
+    """
+    Normalize Unicode characters to ASCII-friendly equivalents.
+    Replaces curly quotes, em-dashes, and other special characters.
+    """
+    replacements = {
+        '\u2018': "'",   # left single quote
+        '\u2019': "'",   # right single quote
+        '\u201c': '"',   # left double quote
+        '\u201d': '"',   # right double quote
+        '\u2013': '-',   # en-dash
+        '\u2014': '-',   # em-dash
+        '\u2026': '...', # ellipsis
+        '\u00a0': ' ',   # non-breaking space
+    }
+    for char, replacement in replacements.items():
+        text = text.replace(char, replacement)
+    # Normalize remaining Unicode to closest ASCII
+    text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('ascii')
+    return text
 
 from openai import OpenAI
 from ollama import Client as OllamaClient
@@ -52,8 +75,16 @@ def get_openai_response(prompt: str, config: dict = None) -> dict:
     delay = RATE_LIMIT_CONFIG.get('delay_seconds', 1.0)
     time.sleep(delay)
 
+    # Extract text - handle None for reasoning models
+    message = response.choices[0].message
+    text = message.content or ''
+
+    # Debug: print response structure if text is empty
+    if not text:
+        print(f"\n[DEBUG] OpenAI response message: {message}")
+
     return {
-        'text': response.choices[0].message.content,
+        'text': normalize_text(text),
         'token_count': response.usage.completion_tokens,
         'model': cfg['model'],
     }
@@ -92,13 +123,24 @@ def get_ollama_response(prompt: str, config: dict = None) -> dict:
     )
 
     # Extract text, excluding thinking tags if present
-    text = response.get('response', '')
-    if cfg.get('think') and '<think>' in text:
-        # Strip thinking section from output
-        text = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL).strip()
+    raw_text = response.get('response', '')
+    text = raw_text
+
+    if cfg.get('think') and '</think>' in text:
+        # Extract content AFTER the closing </think> tag
+        parts = text.split('</think>', 1)
+        if len(parts) > 1:
+            text = parts[1].strip()
+        else:
+            text = ''
+
+    # Debug: print if text is empty after processing
+    if not text and raw_text:
+        print(f"\n[DEBUG] Ollama raw response length: {len(raw_text)}")
+        print(f"[DEBUG] Last 300 chars: {raw_text[-300:]}")
 
     return {
-        'text': text,
+        'text': normalize_text(text),
         'token_count': response.get('eval_count', 0),
         'model': cfg['model'],
     }

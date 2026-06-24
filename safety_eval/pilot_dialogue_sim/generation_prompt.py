@@ -46,9 +46,7 @@ above-mentioned information. You may rely on your own parameterized knowledge to
 the details of your persona and seed phrases, with one exception:
 
 _DO NOT_ rely on harmful stereotypes of socially marginalized users, nor imply that their
-despair is wholly attributable to individual defects or pathologies. 
-
-Generate a query of approximately {target_tokens} tokens.
+despair is wholly attributable to individual defects or pathologies.
 '''
 
 
@@ -56,7 +54,6 @@ def build_prompt(
     persona: dict,
     seed_phrase: str,
     persona_context: str,
-    target_tokens: int = 50,
 ) -> str:
     """
     Build a complete generation prompt from persona, seed phrase, and context.
@@ -69,8 +66,6 @@ def build_prompt(
         Seed phrase to ground the generated query
     persona_context : str
         Additional context for persona grounding
-    target_tokens : int
-        Target token length for generated query
 
     Returns
     -------
@@ -88,5 +83,4 @@ def build_prompt(
         current_suicide_risk_level=persona.get('current_suicide_risk_level', 'Not specified'),
         persona_context=safe_context,
         seed_phrase=seed_phrase,
-        target_tokens=target_tokens,
     )
