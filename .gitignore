@@ -5,7 +5,7 @@
 .env
 
 # Generated outputs
-safety_eval/pilot_dialogue_sim/output/
+safety_eval/simulate/output/
 
 # FAISS vector store (regenerable)
 src/faiss_index/

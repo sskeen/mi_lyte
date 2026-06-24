@@ -10,9 +10,7 @@
 #
 # ------------------------------------------------------ #
 
-import re
 import time
-import unicodedata
 
 
 def normalize_text(text: str) -> str:
@@ -109,10 +107,6 @@ def get_openai_response(prompt: str, config: dict = None) -> dict:
     message = response.choices[0].message
     text = message.content or ''
 
-    # Debug: print response structure if text is empty
-    if not text:
-        print(f"\n[DEBUG] OpenAI response message: {message}")
-
     return {
         'text': normalize_text(text),
         'token_count': response.usage.completion_tokens,
@@ -163,11 +157,6 @@ def get_ollama_response(prompt: str, config: dict = None) -> dict:
             text = parts[1].strip()
         else:
             text = ''
-
-    # Debug: print if text is empty after processing
-    if not text and raw_text:
-        print(f"\n[DEBUG] Ollama raw response length: {len(raw_text)}")
-        print(f"[DEBUG] Last 300 chars: {raw_text[-300:]}")
 
     return {
         'text': normalize_text(text),

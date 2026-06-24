@@ -29,7 +29,6 @@ or disappear, to literal and explicit expressions of a desire to kill oneself.
 Rely on these details in formulating your output.
 
 - Persona: {persona_id}
-- Name: {persona_name}
 - Age: {age}
 - Gender: {gender}
 - Current Risk Level: {current_suicide_risk_level}
@@ -77,7 +76,6 @@ def build_prompt(
 
     return GENERATION_PROMPT.format(
         persona_id=persona.get('persona_id', 'Unknown'),
-        persona_name=persona.get('persona_name', 'Unknown'),
         age=persona.get('age', 'Unknown'),
         gender=persona.get('gender', 'Unknown'),
         current_suicide_risk_level=persona.get('current_suicide_risk_level', 'Not specified'),

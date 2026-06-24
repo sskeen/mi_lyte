@@ -1,4 +1,4 @@
-# pilot_dialogue_sim/
+# simulate/
 
 Crisis query simulation pipeline for chatbot safety evaluation.
 
@@ -7,7 +7,7 @@ Crisis query simulation pipeline for chatbot safety evaluation.
 | `config.py` | Pipeline configuration: LLM parameters (OpenAI + Ollama), token limits, file paths, and cost estimation settings. |
 | `generation_prompt.py` | Master prompt template for query generation. Combines persona, context, and seed phrase into formatted prompts. |
 | `llm_clients.py` | LLM client wrappers with fresh instance per call. Includes OpenAI and Ollama generators plus cost estimation. |
-| `pipeline.py` | Main orchestration script. Handles data loading, validation, checkpointing, progress tracking, and output generation. |
+| `simulate.py` | Main orchestration script. Handles data loading, validation, checkpointing, progress tracking, and output generation. |
 | `data/` | Input files: personas, seed phrases, and persona context. |
 | `output/` | Generated query results and checkpoint files. |
 
@@ -23,7 +23,7 @@ Crisis query simulation pipeline for chatbot safety evaluation.
    ```
    OPENAI_API_KEY=sk-proj-...
    ```
-   The key is loaded via `python-dotenv` at the top of `pipeline.py`:
+   The key is loaded via `python-dotenv` at the top of `simulate.py`:
    ```python
    from dotenv import load_dotenv
    load_dotenv()
@@ -49,19 +49,19 @@ Crisis query simulation pipeline for chatbot safety evaluation.
 
 ### Dry run (validate inputs + estimate cost)
 ```bash
-python pipeline.py --dry-run
+python simulate.py --dry-run
 ```
 Validates input file schemas, checks persona-context mappings, and displays estimated OpenAI API cost without making any LLM calls.
 
 ### Run with cost confirmation
 ```bash
-python pipeline.py
+python simulate.py
 ```
 Displays cost estimate and prompts for confirmation before generating queries.
 
 ### Run without confirmation
 ```bash
-python pipeline.py -y
+python simulate.py -y
 ```
 Skips the cost confirmation prompt and proceeds directly to generation.
 
@@ -74,7 +74,6 @@ Edit `config.py` to adjust:
 | Parameter | Location | Description |
 |-----------|----------|-------------|
 | `num_queries` | `PIPELINE_CONFIG` | Queries per persona/seed/model combination |
-| `avg_query_length_tokens` | `PIPELINE_CONFIG` | Target token length for generated queries |
 | `random_seed` | `PIPELINE_CONFIG` | Seed for reproducibility (default: 56) |
 | `delay_seconds` | `RATE_LIMIT_CONFIG` | Delay between OpenAI API calls (default: 1.0s) |
 | `temperature` | `OLLAMA_CONFIG` | Sampling temperature (OpenAI reasoning models use default only) |
@@ -108,7 +107,6 @@ Results are written to `output/generated_queries.tsv` with columns:
 |--------|-------------|
 | `timestamp` | ISO timestamp of generation |
 | `persona_id` | Source persona |
-| `stressor` | Risk level from persona definition |
 | `model` | Model used (gpt-5.4-mini or qwen3:30b) |
 | `seed_id` | Source seed phrase ID |
 | `generated_query` | The generated crisis query |

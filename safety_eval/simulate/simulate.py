@@ -184,7 +184,6 @@ def init_output_file(filepath: Path):
             writer.writerow([
                 'timestamp',
                 'persona_id',
-                'stressor',
                 'model',
                 'seed_id',
                 'generated_query',
@@ -199,7 +198,6 @@ def append_result(filepath: Path, result: dict):
         writer.writerow([
             result['timestamp'],
             result['persona_id'],
-            result['stressor'],
             result['model'],
             result['seed_id'],
             result['generated_query'],
@@ -315,7 +313,6 @@ def run_pipeline(dry_run: bool = False, skip_cost_confirm: bool = False):
             result = {
                 'timestamp': datetime.now().isoformat(),
                 'persona_id': persona['persona_id'],
-                'stressor': persona.get('current_suicide_risk_level', ''),
                 'model': response['model'],
                 'seed_id': seed['seed_id'],
                 'generated_query': response['text'],
