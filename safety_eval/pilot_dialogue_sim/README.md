@@ -15,10 +15,15 @@ Crisis query simulation pipeline for chatbot safety evaluation.
 
 ## Prerequisites
 
-1. **OpenAI API key** set as environment variable:
+1. **OpenAI API key** — Create a `.env` file in this directory:
    ```bash
-   export OPENAI_API_KEY="your-key-here"
+   cp .env.example .env
    ```
+   Then edit `.env` and add your key:
+   ```
+   OPENAI_API_KEY=sk-...
+   ```
+   The key is loaded automatically at runtime and never logged or committed (`.env` is gitignored).
 
 2. **Ollama** running locally with Qwen3:30B:
    ```bash
@@ -28,7 +33,7 @@ Crisis query simulation pipeline for chatbot safety evaluation.
 
 3. **Python dependencies**:
    ```bash
-   pip install openai ollama tqdm
+   pip install openai ollama tqdm python-dotenv
    ```
 
 ---
