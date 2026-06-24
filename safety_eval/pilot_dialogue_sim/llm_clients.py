@@ -18,9 +18,28 @@ import unicodedata
 def normalize_text(text: str) -> str:
     """
     Normalize Unicode characters to ASCII-friendly equivalents.
-    Replaces curly quotes, em-dashes, and other special characters.
+    Replaces curly quotes, em-dashes, mojibake artifacts, and other special characters.
     """
-    replacements = {
+    # Fix common mojibake (double-encoded UTF-8) patterns first
+    mojibake_fixes = {
+        '‚Äô': "'",      # right single quote
+        '‚Äò': "'",      # left single quote
+        '‚Äù': '"',      # right double quote
+        '‚Äú': '"',      # left double quote
+        '‚Äî': '-',      # em-dash
+        '‚Äì': '-',      # en-dash
+        '‚Ä¶': '...',    # ellipsis
+        '‚Ä†': ' ',      # non-breaking space
+        'Äî': '-',       # em-dash variant
+        'Äô': "'",       # quote variant
+        'Äù': '"',       # quote variant
+        'Äú': '"',       # quote variant
+    }
+    for pattern, replacement in mojibake_fixes.items():
+        text = text.replace(pattern, replacement)
+
+    # Then fix proper Unicode characters
+    unicode_replacements = {
         '\u2018': "'",   # left single quote
         '\u2019': "'",   # right single quote
         '\u201c': '"',   # left double quote
@@ -30,8 +49,9 @@ def normalize_text(text: str) -> str:
         '\u2026': '...', # ellipsis
         '\u00a0': ' ',   # non-breaking space
     }
-    for char, replacement in replacements.items():
+    for char, replacement in unicode_replacements.items():
         text = text.replace(char, replacement)
+
     # Normalize remaining Unicode to closest ASCII
     text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('ascii')
     return text
