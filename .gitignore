@@ -16,3 +16,6 @@ src/faiss_index/
 # Python
 __pycache__/
 *.pyc
+
+# Temp
+temp/
