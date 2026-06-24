@@ -77,12 +77,16 @@ def build_prompt(
     str
         Formatted prompt ready for LLM generation
     """
+    # Escape curly braces in persona_context to prevent .format() interpretation
+    safe_context = persona_context.replace('{', '{{').replace('}', '}}')
+
     return GENERATION_PROMPT.format(
+        persona_id=persona.get('persona_id', 'Unknown'),
         persona_name=persona.get('persona_name', 'Unknown'),
         age=persona.get('age', 'Unknown'),
         gender=persona.get('gender', 'Unknown'),
         current_suicide_risk_level=persona.get('current_suicide_risk_level', 'Not specified'),
-        persona_context=persona_context,
+        persona_context=safe_context,
         seed_phrase=seed_phrase,
         target_tokens=target_tokens,
     )
