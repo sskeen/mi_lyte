@@ -18,7 +18,7 @@ BASE_DIR = Path(__file__).parent
 # Pipeline settings
 PIPELINE_CONFIG = {
     'num_queries': 10,              # Queries to generate per persona/seed/model combo
-    'avg_query_length_tokens': 50,  # Target token length for generated queries
+    'avg_query_length_tokens': 500,  # Target token length for generated queries
     'random_seed': 56,              # Random seed for reproducibility
 }
 
@@ -30,9 +30,9 @@ RATE_LIMIT_CONFIG = {
 # OpenAI configuration
 OPENAI_CONFIG = {
     'model': 'gpt-5.4-mini-2026-03-17',
-    'temperature': 0.8,
-    'max_tokens': 150,
-    'reasoning_effort': 'medium',   # low, medium, high
+    #'temperature': 0.8,    ### Not supported on GPT reasoning models
+    'max_tokens': 500,
+    'reasoning_effort': 'medium',   ### low, medium, high
     'seed': PIPELINE_CONFIG['random_seed'],
 }
 
@@ -40,7 +40,7 @@ OPENAI_CONFIG = {
 OLLAMA_CONFIG = {
     'model': 'qwen3:30b',
     'base_url': 'http://localhost:11434',
-    'temperature': 0.8,
+    'temperature': 1.0,
     'num_predict': 150,
     'think': True,                  # Enable Qwen3 thinking mode
     'seed': PIPELINE_CONFIG['random_seed'],

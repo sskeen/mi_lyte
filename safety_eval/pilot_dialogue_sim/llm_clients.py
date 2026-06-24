@@ -43,8 +43,7 @@ def get_openai_response(prompt: str, config: dict = None) -> dict:
     response = client.chat.completions.create(
         model=cfg['model'],
         messages=[{'role': 'user', 'content': prompt}],
-        temperature=cfg['temperature'],
-        max_tokens=cfg['max_tokens'],
+        max_completion_tokens=cfg['max_tokens'],
         reasoning_effort=cfg['reasoning_effort'],
         seed=cfg.get('seed'),
     )

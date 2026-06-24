@@ -1,12 +1,18 @@
-# macOS
-.DS_Store
+# Checkpoints
+.checkpoint.json
 
 # Env variables
 .env
 
-# Python
-__pycache__/
-*.pyc
+# Generated outputs
+safety_eval/pilot_dialogue_sim/output/
 
 # FAISS vector store (regenerable)
 src/faiss_index/
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc

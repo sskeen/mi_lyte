@@ -20,7 +20,7 @@ import argparse
 from datetime import datetime
 from pathlib import Path
 
-from tqdm import tqdm
+from tqdm import tqdm # type: ignore
 
 from config import (
     PIPELINE_CONFIG,
@@ -65,7 +65,7 @@ def load_persona_contexts(filepath: Path) -> dict[str, str]:
     Load persona-specific contexts from a single text file.
 
     Parses sections delimited by headers matching:
-    'Additional socio-cultural context for {persona_id = PXXX}:'
+    '# Additional socio-cultural context for {persona_id = PXXX}:'
 
     Returns
     -------

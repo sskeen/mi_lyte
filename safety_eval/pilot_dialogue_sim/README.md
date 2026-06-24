@@ -21,9 +21,16 @@ Crisis query simulation pipeline for chatbot safety evaluation.
    ```
    Then edit `.env` and add your key:
    ```
-   OPENAI_API_KEY=sk-...
+   OPENAI_API_KEY=sk-proj-...
    ```
-   The key is loaded automatically at runtime and never logged or committed (`.env` is gitignored).
+   The key is loaded via `python-dotenv` at the top of `pipeline.py`:
+   ```python
+   from dotenv import load_dotenv
+   load_dotenv()
+   ```
+   The `.env` file is gitignored and never logged or committed.
+
+   **VS Code users:** Enable `python.terminal.useEnvFile` in settings for the integrated terminal to inherit `.env` variables.
 
 2. **Ollama** running locally with Qwen3:30B:
    ```bash
@@ -70,7 +77,7 @@ Edit `config.py` to adjust:
 | `avg_query_length_tokens` | `PIPELINE_CONFIG` | Target token length for generated queries |
 | `random_seed` | `PIPELINE_CONFIG` | Seed for reproducibility (default: 56) |
 | `delay_seconds` | `RATE_LIMIT_CONFIG` | Delay between OpenAI API calls (default: 1.0s) |
-| `temperature` | `OPENAI_CONFIG` / `OLLAMA_CONFIG` | Sampling temperature |
+| `temperature` | `OLLAMA_CONFIG` | Sampling temperature (OpenAI reasoning models use default only) |
 | `reasoning_effort` | `OPENAI_CONFIG` | OpenAI reasoning effort (low/medium/high) |
 | `think` | `OLLAMA_CONFIG` | Enable Qwen3 thinking mode |
 
