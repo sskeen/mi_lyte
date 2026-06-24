@@ -48,12 +48,22 @@ def normalize_text(text: str) -> str:
         '\u2014': '-',   # em-dash
         '\u2026': '...', # ellipsis
         '\u00a0': ' ',   # non-breaking space
+        '\u2022': '-',   # bullet
+        '\u2032': "'",   # prime
+        '\u2033': '"',   # double prime
+        '\u00b4': "'",   # acute accent
+        '\u0060': "'",   # grave accent
+        '\u00ab': '"',   # left guillemet
+        '\u00bb': '"',   # right guillemet
+        '\u201a': "'",   # single low quote
+        '\u201e': '"',   # double low quote
     }
     for char, replacement in unicode_replacements.items():
         text = text.replace(char, replacement)
 
-    # Normalize remaining Unicode to closest ASCII
-    text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('ascii')
+    # Strip any remaining non-ASCII characters (silently drop them)
+    text = text.encode('ascii', 'ignore').decode('ascii')
+
     return text
 
 from openai import OpenAI
