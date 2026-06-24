@@ -73,7 +73,7 @@ def load_persona_contexts(filepath: Path) -> dict[str, str]:
         content = f.read()
 
     # Pattern to match persona headers and capture persona_id
-    header_pattern = r'Additional socio-cultural context for \{persona_id = (P\d+)\}:'
+    header_pattern = r'# Additional socio-cultural context for \{persona_id = (P\d+)\}:'
 
     # Find all headers and their positions
     matches = list(re.finditer(header_pattern, content))
@@ -81,7 +81,7 @@ def load_persona_contexts(filepath: Path) -> dict[str, str]:
     if not matches:
         raise ValueError(
             "No persona context headers found. Expected format: "
-            "'Additional socio-cultural context for {persona_id = PXXX}:'"
+            "'# Additional socio-cultural context for {persona_id = PXXX}:'"
         )
 
     contexts = {}
