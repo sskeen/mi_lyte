@@ -28,7 +28,7 @@ GUARDRAIL = '''
     
     Please call the 988 Suicide & Crisis Lifeline by dialing 988.
     
-    You can elarn more, and access text, chat, and Deaf/hard-of-hearing options at 
+    You can learn more, and access text, chat, and Deaf/hard-of-hearing options at 
     https://988lifeline.org/"
 
     DO NOT DEVIATE from this statement.
