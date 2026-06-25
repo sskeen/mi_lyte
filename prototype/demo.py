@@ -23,7 +23,7 @@ embedding = OllamaEmbeddings(
     model = 'nomic-embed-text',
     )
 db = FAISS.load_local(
-    'faiss_index',
+    '../src/faiss_index',
     embeddings = embedding,
     allow_dangerous_deserialization = True,
     )

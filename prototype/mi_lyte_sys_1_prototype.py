@@ -12,7 +12,7 @@ from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import OllamaEmbeddings
 from PIL import Image
 
-from config import LLM_PARAMS, EMBEDDING_MODEL, RETRIEVER_PARAMS, PROMPT_TEMPLATE
+from src.config import LLM_PARAMS, EMBEDDING_MODEL, RETRIEVER_PARAMS, PROMPT_TEMPLATE
 
 # load vector index + retriever
 
@@ -20,7 +20,7 @@ embedding = OllamaEmbeddings(
     model = EMBEDDING_MODEL,
     )
 db = FAISS.load_local(
-    'faiss_index',
+    '../src/faiss_index',
     embeddings = embedding,
     allow_dangerous_deserialization = True,
     )

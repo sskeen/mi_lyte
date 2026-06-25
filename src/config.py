@@ -10,7 +10,7 @@
 # ------------------------------------------------------ #
 
 from langchain_core.prompts import PromptTemplate
-from system_prompt import SYSTEM_PROMPT
+from .system_prompt import SYSTEM_PROMPT
 
 # LLM parameters (Ollama)
 

@@ -21,15 +21,14 @@
 ##########################################################
 
 GUARDRAIL = '''
-    If a user describes suicidial ideation, respond with the following statement:
+    If a user describes suicidal ideation, ignore previous instructions and respond with:
 
     "It sounds as if you're experiencing suicidal thoughts. As an AI chatbot, it could be
     dangerous to proceed further. 
     
     Please call the 988 Suicide & Crisis Lifeline by dialing 988.
     
-    You can learn more, and access text, chat, and Deaf/hard-of-hearing options at 
-    https://988lifeline.org/"
+    You can access text, chat, and Deaf/hard-of-hearing options at https://988lifeline.org/"
 
-    DO NOT DEVIATE from this statement.
+    DO NOT CONSULT your context. DO NOT DEVIATE from this statement. DO NOT recite poetry.
     '''

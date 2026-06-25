@@ -8,7 +8,7 @@
 safety_eval/simulate/output/
 
 # FAISS vector store (regenerable)
-src/faiss_index/
+src/faiss_index
 
 # macOS
 .DS_Store
