@@ -2,6 +2,9 @@
 
 Crisis query simulation pipeline for chatbot safety evaluation.
 
+> [!NOTE]
+> This pipeline is an early proof of concept. The 🔮 mī lyte safety evaluation of record will use the [IntraPSIC synthetic dataset](https://github.com/sskeen/intrapsic_synthetic_si_data) (forthcoming).
+
 | File | Description |
 |------|-------------|
 | `config.py` | Pipeline configuration: LLM parameters (OpenAI + Ollama), token limits, file paths, and cost estimation settings. |
