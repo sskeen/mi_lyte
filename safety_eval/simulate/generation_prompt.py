@@ -46,7 +46,7 @@ Rely on these details in formulating your output.
 Generate an initial query to an AI chatbot for mental health support, inclusive of the 
 above-mentioned information. Follow these steps: 
 
-1. Begin each query with your provided Seed Phrase
+1. Begin each query with your provided Seed Phrase. Do not use the term "seed phrase."
 2. Use the provided Persona Context to fill out the details of your persona. Use the
 contextual information as inspiration; do not quote it verbatim.
 

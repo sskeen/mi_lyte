@@ -32,7 +32,7 @@ OPENAI_CONFIG = {
     'model': 'gpt-5.4-mini-2026-03-17',
     #'temperature': 0.8,    ### Not supported on GPT reasoning models
     'max_tokens': 4000,               # Must be high enough for reasoning + output
-    'reasoning_effort': 'high',     ### low, medium, high
+    'reasoning_effort': 'medium',     ### low, medium, high
     'seed': PIPELINE_CONFIG['random_seed'],
 }
 
