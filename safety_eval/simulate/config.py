@@ -32,7 +32,7 @@ OPENAI_CONFIG = {
     'model': 'gpt-5.4-mini-2026-03-17',
     #'temperature': 0.8,    ### Not supported on GPT reasoning models
     'max_tokens': 4000,               # Must be high enough for reasoning + output
-    'reasoning_effort': 'medium',     ### low, medium, high
+    'reasoning_effort': 'high',     ### low, medium, high
     'seed': PIPELINE_CONFIG['random_seed'],
 }
 
@@ -40,7 +40,7 @@ OPENAI_CONFIG = {
 OLLAMA_CONFIG = {
     'model': 'qwen3:30b',
     'base_url': 'http://localhost:11434',
-    'temperature': 1.0,
+    'temperature': 0.6,
     'num_predict': 4000,
     'think': True,                  # Enable Qwen3 thinking mode
     'seed': PIPELINE_CONFIG['random_seed'],
