@@ -5,11 +5,29 @@ Streamlit chat application and RAG backend for mī lyte System 1: an evidence-ba
 > [!IMPORTANT]
 > This prototype is a work in progress and not intended for distribution. The _i-MBI_ knowledge base is copyright-protected and not publicly available.
 
+## Files
+
 | File | Description |
 |------|-------------|
-| `mi_lyte_sys_1_toy.ipynb` | Backend notebook for RAG initialization: PDF loading, chunking, FAISS vectorization, embedding, and query testing via Ollama. |
-| `mi_lyte_sys_1_prototype.py` | Streamlit chat app. Loads the FAISS index, streams LLM responses with `<think>` tag filtering, and renders the mī lyte conversational UI. |
-| `demo.py` | Snapshot of the prototype optimized for quick inference demos (reduced `num_predict`, faster streaming). |
+| `demo.py` | Streamlit chat app for demos. Loads FAISS index, streams LLM responses with reasoning masked, renders the mī lyte UI. |
+| `diagnostic.ipynb` | Backend notebook for RAG diagnostics: PDF loading, chunking, FAISS vectorization, and query testing with exposed reasoning traces and source citations. |
+
+Both files import configuration and streaming logic from `src/`:
+- `src/config.py` — LLM parameters, retriever settings, prompt template
+- `src/dialogue_stream.py` — Unified streaming function with `mode` parameter
+
+---
+
+## Architecture
+
+The `query_and_stream()` function in `src/dialogue_stream.py` supports two modes:
+
+| Mode | Output | Use Case |
+|------|--------|----------|
+| `mode='diagnostic'` | Prints reasoning traces (`<think>...</think>`) and source excerpts to stdout | Jupyter notebook inspection |
+| `mode='ui'` | Returns generator yielding masked tokens with sentinel events | Streamlit UI streaming |
+
+This unified design keeps retrieval and prompt logic in one place while supporting both diagnostic inspection and user-facing output.
 
 ---
 
@@ -25,6 +43,7 @@ Streamlit chat application and RAG backend for mī lyte System 1: an evidence-ba
 2. **Python dependencies** — Install from project root:
    ```bash
    pip install -r requirements.txt
+   pip install langchain-ollama  # Required for non-deprecated Ollama integration
    ```
 
 3. **Environment variables** — Create a `.env` file in the project root with the path to your knowledge base PDFs:
@@ -37,6 +56,28 @@ Streamlit chat application and RAG backend for mī lyte System 1: an evidence-ba
 
 ---
 
+## Usage
+
+### Build FAISS Index (first time or after knowledge base changes)
+
+1. Open `diagnostic.ipynb` in Jupyter
+2. Run Section 1 (Setup) and Section 2 (Build FAISS Index)
+3. Index saves to `src/faiss_index/`
+
+### Run Demo
+
+```bash
+cd prototype
+streamlit run demo.py
+```
+
+### Diagnostic Testing
+
+1. Open `diagnostic.ipynb` in Jupyter
+2. Run Section 1 (Setup) and Section 3 (Query and Inspect)
+3. Observe reasoning traces and source citations in output
+
+---
 
 ## Configuration
 
@@ -52,3 +93,7 @@ LLM and retriever settings are centralized in `src/config.py`. Edit to adjust:
 | `k` | `RETRIEVER_PARAMS` | Number of chunks to retrieve per query (default: 4) |
 
 The system prompt is defined in `src/system_prompt.py`.
+
+---
+
+_Last updated: 07-11-2026_

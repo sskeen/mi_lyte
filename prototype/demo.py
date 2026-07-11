@@ -1,234 +1,141 @@
 # --------------------------------------------------------------------------- #
 #
 #   demo.py
-#   
-#   `mi_lyte_system01_prototype` - optimized for quick inference demo
 #
-#   Simone J. Skeen (02-02-2026)
+#   Streamlit chat application for mī lyte System 1.
+#   Provides a user-facing interface for RAG-based mindfulness guidance.
+#
+#   This file imports configuration and streaming logic from src/ modules,
+#   keeping the demo self-contained and easy to run.
+#
+#   Usage:
+#       cd prototype
+#       streamlit run demo.py
+#
+#   Simone J. Skeen x Claude Code (07-11-2026)
 #   WIP - NOT FOR DISTRIBUTION
 #
 # --------------------------------------------------------------------------- #
 
-import itertools, streamlit as st, time
-from langchain_core.prompts import PromptTemplate
-from langchain_core.documents import Document
-from langchain_community.llms import Ollama
-from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings import OllamaEmbeddings
-from PIL import Image
+import os
+import sys
+import time
+from pathlib import Path
 
-# load vector index + retriever
+# === FIX OPENMP CONFLICT ON MACOS === #
+# FAISS and other libraries may link multiple OpenMP runtimes.
+# This environment variable must be set before importing those libraries.
+
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
+
+import streamlit as st
+
+# === ADD PROJECT ROOT TO PATH === #
+# This allows importing from src/ modules when running from prototype/.
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
+
+from langchain_ollama import OllamaLLM, OllamaEmbeddings
+from langchain_community.vectorstores import FAISS
+
+# === IMPORT FROM SRC MODULES === #
+# Centralized configuration and streaming logic.
+# - config.py: LLM parameters, retriever settings, prompt template
+# - dialogue_stream.py: Unified streaming function with mode parameter
+
+from src.config import LLM_PARAMS, EMBEDDING_MODEL, RETRIEVER_PARAMS, PROMPT_TEMPLATE
+from src.dialogue_stream import query_and_stream
+
+
+# --------------------------------------------------------------------------- #
+#   INITIALIZATION
+# --------------------------------------------------------------------------- #
+
+# === LOAD VECTOR INDEX + RETRIEVER === #
+# The FAISS index is pre-built from knowledge base PDFs.
+# See diagnostic.ipynb for the build process.
 
 embedding = OllamaEmbeddings(
-    model = 'nomic-embed-text',
-    )
+    model = EMBEDDING_MODEL,
+)
+
 db = FAISS.load_local(
     '../src/faiss_index',
     embeddings = embedding,
-    allow_dangerous_deserialization = True,
-    )
-retriever = db.as_retriever(
-    search_type = 'similarity',
-    search_kwargs = {'k': 4},
-    )
+    allow_dangerous_deserialization = True,  # Required for loading saved FAISS index
+)
 
-# config llm via ollama
+retriever = db.as_retriever(**RETRIEVER_PARAMS)
 
-llm = Ollama(
-    model = 'deepseek-r1:14b', ### model tag for app: 'deepseek-v2' (16b); for dx / reasoning: 'deepseek-r1:14b' (14b)
-    base_url = 'http://localhost:11434',
-    temperature = 0.6, ### args / params: https://api.python.langchain.com/en/latest/llms/langchain_community.llms.ollama.Ollama.html
-    top_p = 0.9,
-    top_k = 40,
-    num_ctx = 2048,
-    num_gpu = -1, ### all model layers offloaded to GPU
-    num_predict = 500, # 768
-    repeat_last_n = 64,
-    stop = None,
-    )
+# === CONFIGURE LLM === #
+# Uses Ollama with DeepSeek-R1 for local inference.
+# Parameters defined in src/config.py.
 
-# config prompt
+llm = OllamaLLM(**LLM_PARAMS)
 
-system_prompt = '''
-    Your name is "mī lyte." You have access to very high quality evidence-based mindfulness skills instruction in your provided context. 
-    You will be prompted with everyday stressors and problems. Your task is to:
-    
-        1.) search your provided context,
-        2.) summarize in-context knowledge on stress and resilience,
-        3.) recommend specific skills and practices that might benefit the user _given_ their reported stressors.
-        
-    - ALWAYS consult your context first when responding. 
-    - NEVER return recommendations from sources other than your context. 
-    - You are warm, empowering, and prioritize empathy in your tone and response contents. 
-    - You maintain a sixth-grade reading level in your responses. 
-    - Do not assume the user is LGBTQ+
-    - Do not reason for more than 100 tokens.
-    - You are concise: you limit responses to 100 words.
-    - If prompted for an inspiring quote, curate from the poetry in your context.
-    - Refer to your context as your "mindfulness knowledge." Do NOT refer to your "context."
-    - At the close of each response, encourage the user to practice the recommended skill.
-    '''
+# === PROMPT TEMPLATE === #
+# Imported from config - includes system prompt with tone/style guidance.
 
-prompt_template = PromptTemplate(
-    input_variables = [
-        'context', 
-        'question',
-        ],
-    template = '''
-        {system_prompt}
+prompt_template = PROMPT_TEMPLATE
 
-        Context:
-        {context}
 
-        Question:
-        {question}
-        '''.strip(),
-            ).partial(system_prompt = system_prompt)
-
-# query_and_stream_ui
-
-        ### SJS 8/8: s/b largely duplicative of query_and_stream fx in jupyter
-
-def query_and_stream_ui(
-    llm, 
-    retriever, 
-    query, 
-    prompt_template, 
-    ):
-
-    '''
-    Wrapper that replicates RetrievalQA (chain_type = 'stuff') behavior with token streaming.
-
-    Parameters:
-    - llm: Ollama LLM (streamable, e.g. Deepseek-R1)
-    - retriever: pre-specfied (external) vector store retriever
-    - query: user question
-    - prompt_template: optional PromptTemplate (context + question)
-    '''
-
-    docs = retriever.invoke(query)
-    context = "\n\n".join(doc.page_content for doc in docs)
-    prompt = prompt_template.format(
-        context = context,
-        question = query,
-        )
-
-    # streaming state
-
-    visible = True
-    buffer = ""
-    lower_buf = ""
-    START_TAG = '<think>'
-    END_TAG = '</think>'
-
-    # mask reasoning trace
-
-    for token in llm.stream(prompt):
-
-        # append token to buffers
-
-        buffer += token
-        lower_buf += token.lower()
-
-        out = []
-        while True:
-            if visible:
-
-                # scan for START_TAG
-
-                i = lower_buf.find(START_TAG)
-                if i == -1:
-
-                    # no START_TAG - emit
-
-                    out.append(buffer)
-                    buffer = ""
-                    lower_buf = ""
-                    break
-
-                else:
-
-                    # emit to tag, enter hidden mode
-
-                    out.append(buffer[:i])
-                    j = i + len(START_TAG)
-                    buffer = buffer[j:]
-                    lower_buf = lower_buf[j:]
-                    visible = False
-                    yield "__HIDDEN_ON__"
-            else:
-
-                # in hidden mode - scan for END_TAG
-
-                i = lower_buf.find(END_TAG)
-                if i == -1:
-                    buffer = buffer[-64:]
-                    lower_buf = lower_buf[-64:]
-                    break
-                else:
-
-                    # drop hidden content until END_TAG + resume visible mode
-
-                    j = i + len(END_TAG)
-                    buffer = buffer[j:]
-                    lower_buf = lower_buf[j:]
-                    visible = True
-                    yield "__HIDDEN_OFF__"
-
-        # stream accumulated visible text
-
-        chunk = "".join(out)
-        if chunk:
-            yield chunk
-
-    # flush remaining visible text post-stream
-
-    if visible and buffer:
-        yield buffer
-
-#    streamed_answer = ""
-#    for token in llm.stream(prompt):
-#        streamed_answer += token
-#        yield token
-
-#    yield "\n\n--- knowledge excerpts ---\n"
-#    for i, doc in enumerate(docs):
-#        yield f"\n[{i+1}] {doc.metadata.get('source', 'Unknown')}, Page: {doc.metadata.get('page', 'N/A')}"
-
-# config streamlit ui
+# --------------------------------------------------------------------------- #
+#   STREAMLIT UI CONFIGURATION
+# --------------------------------------------------------------------------- #
 
 st.set_page_config(
     page_title = "mī lyte",
     page_icon = "🍂",
     layout = 'centered',
-    )
+)
 
-st.write("**mī lyte** is a tool to provide knowledge on stress and resilience, recommending evidence-based informal mindfulness practices to build into your everyday life.\n\n**mī lyte** is _not_ a replacement for in-person therapy. It does not provide medical or psychiatric advice. ")
+# === WELCOME MESSAGE === #
+# Disclaimer about the tool's limitations and scope.
 
-# aesthetics
+st.write(
+    "**mī lyte** is a tool to provide knowledge on stress and resilience, "
+    "recommending evidence-based informal mindfulness practices to build into your everyday life."
+    "\n\n"
+    "**mī lyte** is _not_ a replacement for in-person therapy. "
+    "It does not provide medical or psychiatric advice. "
+)
+
+# === SIDEBAR BRANDING === #
 
 with st.sidebar:
     st.title("🍂mī lyte")
     st.subheader('Accessible mindfulness skills for everyday life')
     st.write("\n\n")
     st.write("\n\n")
-    url = "https://github.com/sskeen/mi_lyte/blob/main/images/mheal_logo.png?raw=true"
-#    img = Image.open('mheal_logo.png')
-#    new_size = (300, 120)
-#    img = img.resize(new_size)
-    st.image(url, output_format = "PNG", width = 120)
-    st.caption("A prototype developed by [mHEAL: the Mindfulness for Health Equity Lab](https://sites.brown.edu/mheal/) at Brown University, grounded in _Mindfulness-Based Queer Resilience_ © Dr. Shufang Sun. ")
 
-# initialize chat Hx
+    # mHEAL logo from GitHub
+    logo_url = "https://github.com/sskeen/mi_lyte/blob/main/images/mheal_logo.png?raw=true"
+    st.image(logo_url, output_format = "PNG", width = 120)
+
+    st.caption(
+        "A prototype developed by "
+        "[mHEAL: the Mindfulness for Health Equity Lab](https://sites.brown.edu/mheal/) "
+        "at Brown University, grounded in _Mindfulness-Based Queer Resilience_ © Dr. Shufang Sun. "
+    )
+
+
+# --------------------------------------------------------------------------- #
+#   CHAT HISTORY MANAGEMENT
+# --------------------------------------------------------------------------- #
+
+# === INITIALIZE SESSION STATE === #
+# Streamlit session state persists across reruns within a session.
 
 if 'chat_history' not in st.session_state:
     st.session_state.chat_history = []
 
-# query input
+# === QUERY INPUT === #
 
 user_input = st.chat_input("I could use some help with...")
 
-# display previous exchanges
+# === DISPLAY PREVIOUS EXCHANGES === #
+# Render all prior conversation turns from session state.
 
 for user_q, assistant_r in st.session_state.chat_history:
     with st.chat_message('user'):
@@ -236,56 +143,76 @@ for user_q, assistant_r in st.session_state.chat_history:
     with st.chat_message('assistant'):
         st.markdown(assistant_r)
 
-# on new query
+
+# --------------------------------------------------------------------------- #
+#   QUERY PROCESSING
+# --------------------------------------------------------------------------- #
 
 if user_input:
+
+    # === DISPLAY USER MESSAGE === #
+
     with st.chat_message("user"):
         st.markdown(user_input)
 
+    # === STREAM ASSISTANT RESPONSE === #
+
     with st.chat_message("assistant"):
+
+        # Placeholder for streaming updates
         response_container = st.empty()
+
+        # Track visible text and hidden state
         visible_text = ""
-        hidden = False ### are we inside <think>…</think>?
+        hidden = False  # True when inside <think>...</think> block
 
+        # === STREAM FROM RAG PIPELINE === #
+        # Use mode='ui' to get masked output with sentinel events.
+        # The streaming function yields:
+        #   - "__HIDDEN_ON__"  when entering <think> block
+        #   - "__HIDDEN_OFF__" when exiting </think> block
+        #   - text tokens otherwise
 
-        for part in query_and_stream_ui(llm, retriever, user_input, prompt_template):
+        for part in query_and_stream(
+            llm,
+            retriever,
+            user_input,
+            prompt_template,
+            mode = 'ui',
+        ):
 
-            # sentinel events
+            # --- HANDLE SENTINEL EVENTS --- #
 
             if part == "__HIDDEN_ON__":
+                # Model entered reasoning block - show "Generating..." indicator
                 hidden = True
-
-                # render once with "_Generating..._"
-
                 response_container.markdown(visible_text + " _Generating..._")
                 continue
+
             if part == "__HIDDEN_OFF__":
+                # Model exited reasoning block - resume normal streaming
                 hidden = False
-
-                # revert to cursor-on streaming immediately
-
                 response_container.markdown(visible_text + "▍")
                 continue
 
-            # normal visible tokens
+            # --- HANDLE NORMAL TOKENS --- #
 
             visible_text += part
 
-            # during visible streaming, show cursor "▍" 
-
             if not hidden:
+                # Visible streaming - show cursor animation
                 response_container.markdown(visible_text + "▍")
-                time.sleep(0.005)
+                time.sleep(0.005)  # Small delay for visual streaming effect
             else:
-
-                # still hidden - display "_Generating..._"
-
+                # Still in hidden mode - maintain "Generating..." indicator
                 response_container.markdown(visible_text + " _Generating..._")
 
-        # drop cursor on completion
+        # === FINALIZE RESPONSE === #
+        # Remove cursor after stream completes.
 
         response_container.markdown(visible_text)
 
-    # store (optional: save the final visible_text instead of "(see above)")
-    
+    # === STORE IN CHAT HISTORY === #
+    # Append the exchange for multi-turn conversation support.
+
     st.session_state.chat_history.append((user_input, visible_text))
