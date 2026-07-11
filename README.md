@@ -7,6 +7,19 @@
   <em>Illustrative example: an evidence-based mī lyte recommendation delivered via the web app UI.</em>
 </p>
 
+## Directory structure
+
+```
+.
+└── mi-lyte/
+    ├── images
+    ├── prototype
+    ├── safety/
+    │   ├── evaluate
+    │   └── simulate
+    └── src
+```
+
 A prototype developed by [Dr. Simone Skeen](https://simoneskeen.xyz/) for the [Global Mental Health and Flourishing Lab](https://sites.brown.edu/globalflourishing/) at Brown University, grounded in _i-MBI: internet mindfulness-based intervention_ © [Dr. Shufang Sun](https://vivo.brown.edu/display/ssun33). Uniquely, to our knowledge, mī lyte combines a mindful self-regulation (System 1) and a PrEP education (System 2) intervention, leveraging the unique strengths of Transformer-based LLMs and traditional deterministic dialogue systems, respectively, in an Information-Motivation-Behavioral (IMB) skills–grounded manner.[^1] 
 
 Presently (07-06-2026) in review for National Center for Complementary and Integrative Health (NCCIH) funding opportunity [PA-24-193](https://grants.nih.gov/grants/guide/pa-files/PA-24-193.html).
