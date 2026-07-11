@@ -13,7 +13,13 @@
 
 from langchain_core.prompts import PromptTemplate
 import ollama
+from .config import OLLAMA_HOST
 
+# === OLLAMA CLIENT === #
+# Create client with configured host (local or remote).
+# This allows using a remote Ollama instance on the LAN.
+
+_ollama_client = ollama.Client(host=OLLAMA_HOST)
 
 # === DEFAULT PROMPT TEMPLATE === #
 # Used when no prompt_template is passed to query_and_stream().
@@ -189,10 +195,11 @@ def _stream_diagnostic(llm, prompt, docs, show_sources):
     model_name = llm.model if hasattr(llm, 'model') else 'deepseek-r1:14b'
 
     # === NATIVE OLLAMA STREAMING WITH REASONING === #
-    # Use the native ollama library (not LangChain wrapper) to access
+    # Use the native ollama client (not LangChain wrapper) to access
     # the think=True parameter, which exposes the model's reasoning trace.
+    # The client is configured with OLLAMA_HOST for remote GPU support.
 
-    stream = ollama.chat(
+    stream = _ollama_client.chat(
         model = model_name,
         messages = [{'role': 'user', 'content': prompt}],
         think = True,   # Enable reasoning trace exposure
@@ -319,10 +326,11 @@ def _stream_ui(llm, prompt):
     model_name = llm.model if hasattr(llm, 'model') else 'deepseek-r1:14b'
 
     # === NATIVE OLLAMA STREAMING WITH REASONING === #
-    # Use native ollama library to access think=True parameter,
+    # Use native ollama client to access think=True parameter,
     # which separates thinking tokens from response tokens.
+    # The client is configured with OLLAMA_HOST for remote GPU support.
 
-    stream = ollama.chat(
+    stream = _ollama_client.chat(
         model = model_name,
         messages = [{'role': 'user', 'content': prompt}],
         think = True,   # Enable reasoning trace separation

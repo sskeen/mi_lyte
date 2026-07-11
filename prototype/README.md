@@ -96,4 +96,21 @@ The system prompt is defined in `src/system_prompt.py`.
 
 ---
 
+## Remote Ollama Support
+
+To use a remote GPU server for LLM inference, set `OLLAMA_HOST` in your `.env` file:
+
+```
+OLLAMA_HOST=http://192.168.x.x:11434
+```
+
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `OLLAMA_HOST` | LLM inference (can be remote GPU) | `http://localhost:11434` |
+| `OLLAMA_EMBED_HOST` | Embeddings (local nomic-embed-text) | `http://localhost:11434` |
+
+Embeddings always run locally by default since `nomic-embed-text` may not be available on the remote server.
+
+---
+
 _Last updated: 07-11-2026_

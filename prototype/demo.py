@@ -44,7 +44,7 @@ from langchain_community.vectorstores import FAISS
 # - config.py: LLM parameters, retriever settings, prompt template
 # - dialogue_stream.py: Unified streaming function with mode parameter
 
-from src.config import LLM_PARAMS, EMBEDDING_MODEL, RETRIEVER_PARAMS, PROMPT_TEMPLATE
+from src.config import LLM_PARAMS, EMBEDDING_MODEL, RETRIEVER_PARAMS, PROMPT_TEMPLATE, OLLAMA_EMBED_HOST
 from src.dialogue_stream import query_and_stream
 
 
@@ -58,6 +58,7 @@ from src.dialogue_stream import query_and_stream
 
 embedding = OllamaEmbeddings(
     model = EMBEDDING_MODEL,
+    base_url = OLLAMA_EMBED_HOST,  # Embeddings run locally
 )
 
 db = FAISS.load_local(
