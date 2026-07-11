@@ -23,7 +23,7 @@ load_dotenv(_PROJECT_ROOT / '.env')
 
 # === OLLAMA HOST === #
 # Set OLLAMA_HOST in .env for remote GPU server, e.g.:
-#   OLLAMA_HOST=http://192.168.1.100:11434
+#   OLLAMA_HOST=http://192.168.x.x:11434
 # Defaults to localhost if not specified.
 
 OLLAMA_HOST = os.environ.get('OLLAMA_HOST', 'http://localhost:11434')

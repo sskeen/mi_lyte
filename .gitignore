@@ -22,3 +22,6 @@ temp/
 
 # Generated crisis queries (prelim)
 generated_queries.tsv
+
+# Pilot eval results (prelim)
+pilot_evaluation.tsv
