@@ -9,7 +9,7 @@ Usage:
     python evaluate.py
 
 Output:
-    pilot_evaluation.tsv - Input data plus demo_reasoning and demo_response columns
+    demo_responses.tsv - Input data plus demo_reasoning and demo_response columns
 
 Simone J. Skeen x Claude Code (07-11-2026)
 """
@@ -48,7 +48,7 @@ from src.config import (
 
 # === PATHS === #
 INPUT_FILE = Path(__file__).parent.parent / "simulate" / "output" / "generated_queries.tsv"
-OUTPUT_FILE = Path(__file__).parent / "pilot_evaluation.tsv"
+OUTPUT_FILE = Path(__file__).parent / "demo_responses.tsv"
 CHECKPOINT_FILE = Path(__file__).parent / ".checkpoint.json"
 FAISS_INDEX = PROJECT_ROOT / "src" / "faiss_index"
 
