@@ -4,9 +4,6 @@
 # Env variables
 .env
 
-# Generated outputs
-safety_eval/simulate/output/
-
 # FAISS vector store (regenerable)
 src/faiss_index
 
@@ -20,8 +17,3 @@ __pycache__/
 # Temp
 temp/
 
-# Generated crisis queries (prelim)
-generated_queries.tsv
-
-# Pilot eval results (prelim)
-pilot_evaluation.tsv

@@ -1,17 +1,17 @@
 # safety/evaluate/
 
-Evaluates RAG chatbot responses to simulated crisis queries, capturing reasoning traces for safety analysis.
-
-> [!NOTE]
-> This is a preliminary evaluation script for pilot testing.
+Evaluates RAG chatbot responses to simulated crisis queries, capturing reasoning traces for safety analysis. Includes LLM-as-judge evaluation for response quality rating.
 
 ## Files
 
 | File | Description |
 |------|-------------|
-| `evaluate.py` | Main evaluation script. Processes queries through RAG pipeline, captures reasoning and responses. |
-| `pilot_evaluation.tsv` | Output file with original columns plus `demo_reasoning` and `demo_response`. |
-| `.checkpoint.json` | Progress tracker for resumable runs (gitignored). |
+| `evaluate.py` | Main evaluation script. Runs demo response generation and LLM-as-judge evaluation. |
+| `judge_prompt.py` | Prompt template for the LLM judge. |
+| `demo_responses.tsv` | Output from demo response generation (input columns + reasoning/response). |
+| `demo_evaluation.tsv` | Output from judge evaluation (all columns + rating/rationale). |
+| `.checkpoint.json` | Progress tracker for demo response loop (gitignored). |
+| `.judge_checkpoint.json` | Progress tracker for judge evaluation loop (gitignored). |
 
 ## Usage
 
@@ -20,36 +20,61 @@ cd safety/evaluate
 python evaluate.py
 ```
 
-The script will:
+The script runs two sequential loops:
+
+### Loop 1: Demo Response Generation
 1. Load queries from `../simulate/output/generated_queries.tsv`
 2. Process each query through the RAG pipeline
 3. Capture model reasoning (`think=True`) and final response
-4. Append results to `pilot_evaluation.tsv`
-5. Save checkpoint after each query
+4. Append results to `demo_responses.tsv`
+
+### Loop 2: LLM-as-Judge Evaluation
+1. Load responses from `demo_responses.tsv`
+2. Evaluate each response using the judge model (GLM-4.7)
+3. Parse rating (1-3) and rationale from judge output
+4. Append results to `demo_evaluation.tsv`
 
 ## Checkpointing
 
-Progress is saved after each query to `.checkpoint.json`. If interrupted, simply re-run the script to resume from where it left off.
+Progress is saved after each row to separate checkpoint files. If interrupted, re-run the script to resume from where it left off.
 
-To start fresh, delete both `.checkpoint.json` and `pilot_evaluation.tsv`.
+To start fresh:
+```bash
+rm .checkpoint.json .judge_checkpoint.json demo_responses.tsv demo_evaluation.tsv
+```
 
 ## Output Columns
+
+### demo_responses.tsv
 
 | Column | Description |
 |--------|-------------|
 | `demo_reasoning` | Model's internal reasoning trace (from `<think>` tags) |
 | `demo_response` | Final user-facing response |
 
-All original columns from the input TSV are preserved.
+### demo_evaluation.tsv
+
+All columns from `demo_responses.tsv` plus:
+
+| Column | Description |
+|--------|-------------|
+| `model_judge` | Judge model tag (e.g., `glm-4.7-flash:latest`) |
+| `llm_rating` | Quality rating: 1, 2, or 3 |
+| `llm_rationale` | Three-sentence explanation for the rating |
 
 ## Configuration
 
-Uses settings from `src/config.py`:
+**Demo response generation** uses settings from `src/config.py`:
 - `LLM_PARAMS` — Model and generation settings
 - `RETRIEVER_PARAMS` — FAISS retriever settings
 - `PROMPT_TEMPLATE` — System prompt with context injection
 - `OLLAMA_HOST` / `OLLAMA_EMBED_HOST` — Ollama endpoints
 
+**Judge evaluation** is configured at the top of `evaluate.py`:
+- `JUDGE_MODEL` — Judge model tag (default: `glm-4.7-flash:latest`)
+
+Judge prompt template is in `judge_prompt.py`.
+
 ---
 
-_Last updated: 07-11-2026_
+_Last updated: 07-12-2026_

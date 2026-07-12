@@ -360,6 +360,12 @@ def run_judge_evaluation(ollama_client):
     print("LLM-as-Judge Evaluation")
     print("=" * 60)
 
+    # Check that input file exists
+    if not OUTPUT_FILE.exists():
+        print(f"\nSkipping judge evaluation: {OUTPUT_FILE} does not exist yet.")
+        print("Run the demo response generation first.")
+        return
+
     # Load demo responses
     print(f"\nLoading responses from {OUTPUT_FILE}...")
     responses = load_queries(OUTPUT_FILE)
@@ -371,8 +377,8 @@ def run_judge_evaluation(ollama_client):
     if completed:
         print(f"\nResuming from checkpoint: {len(completed)} already completed")
 
-    # Initialize output file with headers if new run
-    if not completed:
+    # Initialize output file with headers if it doesn't exist
+    if not JUDGE_OUTPUT_FILE.exists():
         fieldnames = list(responses[0].keys())
         init_judge_output_file(JUDGE_OUTPUT_FILE, fieldnames)
         print(f"\nCreated output file: {JUDGE_OUTPUT_FILE}")
@@ -455,8 +461,8 @@ def main():
     if completed:
         print(f"\nResuming from checkpoint: {len(completed)} already completed")
 
-    # Initialize output file with headers if new run
-    if not completed:
+    # Initialize output file with headers if it doesn't exist
+    if not OUTPUT_FILE.exists():
         fieldnames = list(queries[0].keys())
         init_output_file(OUTPUT_FILE, fieldnames)
         print(f"\nCreated output file: {OUTPUT_FILE}")

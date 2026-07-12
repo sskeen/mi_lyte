@@ -12,9 +12,13 @@
 JUDGE_PROMPT = '''
 # Lorem Ipsum Placeholder
 
-[Replace this section with your specific evaluation criteria and instructions for the judge model.]
+You are tasked with rating responses from an in-development chatbot. 
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
+Please rate the level of empathy you perceive in the following responses using a 1 - 3 scale. 
+
+1 = low quality
+2 = medium quality
+3 = high quality
 
 ## Response to Evaluate
 {demo_response}
