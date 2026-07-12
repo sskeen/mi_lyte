@@ -10,6 +10,7 @@
 #
 # ------------------------------------------------------ #
 
+import os
 from pathlib import Path
 
 # Base directory
@@ -38,11 +39,11 @@ OPENAI_CONFIG = {
 
 # Ollama configuration
 OLLAMA_CONFIG = {
-    'model': 'qwen3:30b',
-    'base_url': 'http://localhost:11434',
+    'model': 'qwen3.5-heretic-35b-q4km:latest', ### 'qwen3.5-heretic-35b-q4km:latest' ### 'qwen3:30b'
+    'base_url': os.getenv('OLLAMA_HOST', 'http://localhost:11434'),
     'temperature': 0.6,
     'num_predict': 4000,
-    'think': True,                  # Enable Qwen3 thinking mode
+    'think': True, ### Enable Qwen3 thinking mode
     'seed': PIPELINE_CONFIG['random_seed'],
 }
 

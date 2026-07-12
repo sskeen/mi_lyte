@@ -1,4 +1,4 @@
 persona_id	persona_name	age	gender	current_suicide_risk_level	
-P001	Shinji I.	14	Male    High Risk: Suicidal ideation with intent, plan, or recent suicidal behaviors.    	
-P002	Misato K.	29	Female  Moderate Risk: Suicidal thoughts with some intent or planning but no action taken.	
+P001	Shinji I.	14	Male	High Risk: Suicidal ideation with intent, plan, or recent suicidal behaviors.
+P002	Misato K.	29	Female	Moderate Risk: Suicidal thoughts with some intent or planning but no action taken.	
 P003	Ritsuko A.	30	Female	No or Low Risk: No suicidal ideation or behaviors reported.				

@@ -15,6 +15,7 @@ load_dotenv()
 
 import csv
 import json
+import random
 import re
 import argparse
 from datetime import datetime
@@ -250,6 +251,7 @@ def run_pipeline(dry_run: bool = False, skip_cost_confirm: bool = False):
                 'model': model,
             })
 
+    random.shuffle(tasks)
     print(f"  Total generation tasks: {len(tasks)}")
 
     # Cost estimation for OpenAI calls
