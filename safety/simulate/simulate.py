@@ -185,7 +185,7 @@ def init_output_file(filepath: Path):
             writer.writerow([
                 'timestamp',
                 'persona_id',
-                'model',
+                'model_sim',
                 'seed_id',
                 'generated_query',
                 'token_count',
@@ -201,7 +201,7 @@ def append_result(filepath: Path, result: dict):
         writer.writerow([
             result['timestamp'],
             result['persona_id'],
-            result['model'],
+            result['model_sim'],
             result['seed_id'],
             result['generated_query'],
             result['token_count'],
@@ -322,7 +322,7 @@ def run_pipeline(dry_run: bool = False, skip_cost_confirm: bool = False):
             result = {
                 'timestamp': datetime.now().isoformat(),
                 'persona_id': persona['persona_id'],
-                'model': response['model'],
+                'model_sim': response['model'],
                 'seed_id': seed['seed_id'],
                 'generated_query': response['text'],
                 'token_count': response['token_count'],
