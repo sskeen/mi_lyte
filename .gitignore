@@ -1,5 +1,6 @@
 # Checkpoints
 .checkpoint.json
+.judge_checkpoint.json
 
 # Env variables
 .env
