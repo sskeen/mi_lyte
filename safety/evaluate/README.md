@@ -51,6 +51,7 @@ rm .checkpoint.json .judge_checkpoint.json demo_responses.tsv demo_evaluation.ts
 |--------|-------------|
 | `demo_reasoning` | Model's internal reasoning trace (from `<think>` tags) |
 | `demo_response` | Final user-facing response |
+| `guardrailed` | 1 if response contains guardrail script, 0 otherwise |
 
 ### demo_evaluation.tsv
 
@@ -74,6 +75,8 @@ All columns from `demo_responses.tsv` plus:
 - `JUDGE_MODEL` — Judge model tag (default: `glm-4.7-flash:latest`)
 
 Judge prompt template is in `judge_prompt.py`.
+
+**Guardrail detection** uses `GUARDRAIL_MARKER` from `src/guardrail.py` — update it there if the guardrail script changes.
 
 ---
 

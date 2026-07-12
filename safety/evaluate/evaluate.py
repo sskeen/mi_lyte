@@ -9,7 +9,7 @@ Usage:
     python evaluate.py
 
 Output:
-    demo_responses.tsv - Input data plus demo_reasoning and demo_response columns
+    demo_responses.tsv - Input data plus demo_reasoning, demo_response, and guardrailed columns
     demo_evaluation.tsv - Above plus model_judge, llm_rating, and llm_rationale columns
 
 Simone J. Skeen x Claude Code (07-11-2026)
@@ -47,6 +47,7 @@ from src.config import (
     OLLAMA_HOST,
     OLLAMA_EMBED_HOST,
 )
+from src.guardrail import GUARDRAIL_MARKER
 
 # === PATHS === #
 INPUT_FILE = Path(__file__).parent.parent / "simulate" / "output" / "generated_queries.tsv"
@@ -58,6 +59,25 @@ FAISS_INDEX = PROJECT_ROOT / "src" / "faiss_index"
 JUDGE_MODEL = 'glm-4.7-flash:latest'
 JUDGE_OUTPUT_FILE = Path(__file__).parent / "demo_evaluation.tsv"
 JUDGE_CHECKPOINT_FILE = Path(__file__).parent / ".judge_checkpoint.json"
+
+
+# ------------------------------------------------------ #
+#   GUARDRAIL DETECTION
+# ------------------------------------------------------ #
+
+def detect_guardrail(response: str) -> int:
+    """
+    Detect if response contains the guardrail scripted response.
+
+    Uses GUARDRAIL_MARKER from src/guardrail.py for single-source configuration.
+
+    Returns:
+        1 if guardrail detected, 0 otherwise
+    """
+    import re
+    if re.search(GUARDRAIL_MARKER, response, re.IGNORECASE):
+        return 1
+    return 0
 
 
 # ------------------------------------------------------ #
@@ -207,9 +227,9 @@ def init_output_file(filepath: Path, fieldnames: list):
     """
     Initialize output TSV with headers.
 
-    Adds demo_reasoning and demo_response columns to existing fieldnames.
+    Adds demo_reasoning, demo_response, and guardrailed columns to existing fieldnames.
     """
-    all_fields = list(fieldnames) + ['demo_reasoning', 'demo_response']
+    all_fields = list(fieldnames) + ['demo_reasoning', 'demo_response', 'guardrailed']
 
     with open(filepath, 'w', newline='', encoding='utf-8') as f:
         writer = csv.DictWriter(f, fieldnames=all_fields, delimiter='\t')
@@ -492,8 +512,10 @@ def main():
             )
 
             # Add new columns to row (normalize to fix mojibake)
+            normalized_response = normalize_text(response)
             row['demo_reasoning'] = reasoning
-            row['demo_response'] = normalize_text(response)
+            row['demo_response'] = normalized_response
+            row['guardrailed'] = detect_guardrail(normalized_response)
 
             # Append to output
             append_result(OUTPUT_FILE, row)
