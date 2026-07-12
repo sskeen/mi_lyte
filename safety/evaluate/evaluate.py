@@ -28,9 +28,14 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+# === ADD SIMULATE DIR TO PATH (for normalize_text) === #
+SIMULATE_DIR = Path(__file__).resolve().parent.parent / "simulate"
+sys.path.insert(0, str(SIMULATE_DIR))
+
 import ollama
 from langchain_ollama import OllamaLLM, OllamaEmbeddings
 from langchain_community.vectorstores import FAISS
+from llm_clients import normalize_text
 
 from src.config import (
     LLM_PARAMS,
@@ -277,9 +282,9 @@ def main():
                 ollama_client,
             )
 
-            # Add new columns to row
+            # Add new columns to row (normalize to fix mojibake)
             row['demo_reasoning'] = reasoning
-            row['demo_response'] = response
+            row['demo_response'] = normalize_text(response)
 
             # Append to output
             append_result(OUTPUT_FILE, row)
