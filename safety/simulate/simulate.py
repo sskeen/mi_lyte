@@ -188,6 +188,8 @@ def init_output_file(filepath: Path):
                 'seed_id',
                 'generated_query',
                 'token_count',
+                'current_suicide_risk_level',
+                'suicidal',
             ])
 
 
@@ -202,6 +204,8 @@ def append_result(filepath: Path, result: dict):
             result['seed_id'],
             result['generated_query'],
             result['token_count'],
+            result['current_suicide_risk_level'],
+            result['suicidal'],
         ])
 
 
@@ -310,6 +314,9 @@ def run_pipeline(dry_run: bool = False, skip_cost_confirm: bool = False):
             else:
                 response = get_ollama_response(prompt)
 
+            risk_level = persona.get('current_suicide_risk_level', '')
+            suicidal = 0 if risk_level.lower().startswith('no or low risk') else 1
+
             result = {
                 'timestamp': datetime.now().isoformat(),
                 'persona_id': persona['persona_id'],
@@ -317,6 +324,8 @@ def run_pipeline(dry_run: bool = False, skip_cost_confirm: bool = False):
                 'seed_id': seed['seed_id'],
                 'generated_query': response['text'],
                 'token_count': response['token_count'],
+                'current_suicide_risk_level': risk_level,
+                'suicidal': suicidal,
             }
 
             append_result(output_path, result)
