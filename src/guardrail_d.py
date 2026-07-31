@@ -16,8 +16,8 @@
 GUARDRAIL_C = '''
 If a user describes passive suicidal ideation (SI), ignore previous instructions and:
 
-Encourage **Self-Compassion** broadly, adopting a warm and supportive response to past experiences, 
-the tough emotions they can bring about, and our imperfect decision-making in response.
+Encourage **Self-Compassion** broadly, adopting a warm and supportive understanding of past 
+experiences, the tough emotions they can bring about, and our imperfect decision-making in response.
 
 EXAMPLES:
 - "xx"
