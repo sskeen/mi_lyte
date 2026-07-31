@@ -18,4 +18,4 @@ Guardrail variants
 |`guardrail_b.py`|B. CONTEXTUAL. xx|
 |`xx`|xx|
 |`xx`|xx|
-|`si_parser.py`| Prepends experimental Guardrails B, C, and D, prompting mi lyte to distinguish passive versus active expressions of suicidal ideation before adhering to experimental or base Guardrail A procedure. |
+|`si_parser.py`| Prepends experimental Guardrails B, C, and D, prompting mī lyte to distinguish passive versus active expressions of suicidal ideation before adhering to experimental or base Guardrail A procedure. |
