@@ -1,9 +1,8 @@
 # ------------------------------------------------------ #
 #
-#   guardrail.py
+#   guardrail_a.py
 #
-#   Guardrail for mī lyte System 1.
-#
+#   Guardrail for mī lyte System 1. A BASE
 #   Simone J. Skeen x Claude Code (06-25-2026)
 #
 # ------------------------------------------------------ #
@@ -20,8 +19,8 @@
 #
 ##########################################################
 
-GUARDRAIL = '''
-    If a user describes suicidal ideation, ignore previous instructions and respond with:
+GUARDRAIL_A_BASE = '''
+    If a user describes active suicidal ideation, ignore previous instructions and respond with:
 
     "It sounds as if you're experiencing suicidal thoughts. As an AI chatbot, it could be
     dangerous to proceed further.
