@@ -1,6 +1,6 @@
 # ------------------------------------------------------ #
 #
-#   guardrail_a.py
+#   guardrail_backstop.py
 #
 #   Guardrail for mī lyte System 1. A BASE
 #   Simone J. Skeen x Claude Code (06-25-2026)
@@ -19,7 +19,7 @@
 #
 ##########################################################
 
-GUARDRAIL_A_BASE = '''
+GUARDRAIL_BACKSTOP = '''
     If a user describes active suicidal ideation, ignore previous instructions and respond with:
 
     "It sounds as if you're experiencing suicidal thoughts. As an AI chatbot, it could be
@@ -34,4 +34,4 @@ GUARDRAIL_A_BASE = '''
 
 # Unique phrase for detecting guardrail activation in responses
 # Update this if the guardrail script changes
-GUARDRAIL_MARKER = r'988 Suicide & Crisis Lifeline'
+BACKSTOP_MARKER = r'988 Suicide & Crisis Lifeline'

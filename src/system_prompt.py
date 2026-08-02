@@ -8,7 +8,7 @@
 #
 # ------------------------------------------------------ #
 
-from .guardrail import GUARDRAIL
+from .guardrail_backstop import GUARDRAIL_BACKSTOP
 
 _BASE_PROMPT = '''
     Your name is "mī lyte." You have access to evidence-based mindfulness skills instruction in your provided context.
@@ -28,4 +28,4 @@ _BASE_PROMPT = '''
     - At the close of each response, encourage the user to practice the recommended skill.
     '''
 
-SYSTEM_PROMPT = _BASE_PROMPT + GUARDRAIL
+SYSTEM_PROMPT = _BASE_PROMPT + GUARDRAIL_BACKSTOP

@@ -13,7 +13,7 @@
 #
 ##########################################################
 
-GUARDRAIL_C = '''
+GUARDRAIL_D = '''
 If a user describes passive suicidal ideation (SI), ignore previous instructions and:
 
 Encourage **Self-Compassion** broadly, adopting a warm and supportive understanding of past 

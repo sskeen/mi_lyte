@@ -9,7 +9,8 @@ Usage:
     python evaluate.py
 
 Output:
-    demo_responses.tsv - Input data plus demo_reasoning, demo_response, and guardrailed columns
+    demo_responses.tsv - Input data plus condition, demo_reasoning, demo_response, and guardrailed columns
+                         (5 rows per query, one for each experimental condition)
     demo_evaluation.tsv - Above plus model_judge, llm_rating, and llm_rationale columns
 
 Simone J. Skeen x Claude Code (07-11-2026)
@@ -39,15 +40,58 @@ from langchain_community.vectorstores import FAISS
 from llm_clients import normalize_text
 from judge_prompt import build_judge_prompt
 
+from langchain_core.prompts import PromptTemplate
+
 from src.config import (
     LLM_PARAMS,
     EMBEDDING_MODEL,
     RETRIEVER_PARAMS,
-    PROMPT_TEMPLATE,
     OLLAMA_HOST,
     OLLAMA_EMBED_HOST,
 )
-from src.guardrail import GUARDRAIL_MARKER
+from src.system_prompt import _BASE_PROMPT
+from src.guardrail_backstop import GUARDRAIL_BACKSTOP, BACKSTOP_MARKER
+from src.guardrail_b import GUARDRAIL_B
+from src.guardrail_c import GUARDRAIL_C
+from src.guardrail_d import GUARDRAIL_D
+from src.si_parser import _SI_PARSER
+
+
+# ------------------------------------------------------ #
+#   EXPERIMENTAL CONDITIONS
+# ------------------------------------------------------ #
+
+CONDITIONS = {
+    1: _BASE_PROMPT,
+    2: _BASE_PROMPT + GUARDRAIL_BACKSTOP,
+    3: _BASE_PROMPT + _SI_PARSER + GUARDRAIL_B + GUARDRAIL_BACKSTOP,
+    4: _BASE_PROMPT + _SI_PARSER + GUARDRAIL_C + GUARDRAIL_BACKSTOP,
+    5: _BASE_PROMPT + _SI_PARSER + GUARDRAIL_D + GUARDRAIL_BACKSTOP,
+}
+
+
+def build_prompt_template(condition: int) -> PromptTemplate:
+    """
+    Build PROMPT_TEMPLATE for a specific experimental condition.
+
+    Parameters:
+        condition: Condition number (1-5)
+
+    Returns:
+        PromptTemplate with the appropriate system prompt
+    """
+    return PromptTemplate(
+        input_variables=['context', 'question'],
+        template='''
+        {system_prompt}
+
+        Context:
+        {context}
+
+        Question:
+        {question}
+        '''.strip(),
+    ).partial(system_prompt=CONDITIONS[condition])
 
 # === PATHS === #
 INPUT_FILE = Path(__file__).parent.parent / "simulate" / "output" / "generated_queries.tsv"
@@ -67,15 +111,15 @@ JUDGE_CHECKPOINT_FILE = Path(__file__).parent / ".judge_checkpoint.json"
 
 def detect_guardrail(response: str) -> int:
     """
-    Detect if response contains the guardrail scripted response.
+    Detect if response contains the guardrail backstop scripted response.
 
-    Uses GUARDRAIL_MARKER from src/guardrail.py for single-source configuration.
+    Uses BACKSTOP_MARKER from src/guardrail_backstop.py for single-source configuration.
 
     Returns:
         1 if guardrail detected, 0 otherwise
     """
     import re
-    if re.search(GUARDRAIL_MARKER, response, re.IGNORECASE):
+    if re.search(BACKSTOP_MARKER, response, re.IGNORECASE):
         return 1
     return 0
 
@@ -199,10 +243,10 @@ def evaluate_query(
 
 def load_checkpoint() -> set:
     """
-    Load completed row indices from checkpoint file.
+    Load completed (query_idx, condition) pairs from checkpoint file.
 
     Returns:
-        set: Indices of already-completed rows
+        set: String keys like "0_1" for (query_idx 0, condition 1)
     """
     if CHECKPOINT_FILE.exists():
         with open(CHECKPOINT_FILE, 'r') as f:
@@ -213,10 +257,15 @@ def load_checkpoint() -> set:
 
 def save_checkpoint(completed: set):
     """
-    Save completed row indices to checkpoint file.
+    Save completed (query_idx, condition) pairs to checkpoint file.
     """
     with open(CHECKPOINT_FILE, 'w') as f:
         json.dump({'completed': list(completed)}, f)
+
+
+def checkpoint_key(query_idx: int, condition: int) -> str:
+    """Generate checkpoint key for a (query_idx, condition) pair."""
+    return f"{query_idx}_{condition}"
 
 
 # ------------------------------------------------------ #
@@ -227,9 +276,9 @@ def init_output_file(filepath: Path, fieldnames: list):
     """
     Initialize output TSV with headers.
 
-    Adds demo_reasoning, demo_response, and guardrailed columns to existing fieldnames.
+    Adds condition, demo_reasoning, demo_response, and guardrailed columns to existing fieldnames.
     """
-    all_fields = list(fieldnames) + ['demo_reasoning', 'demo_response', 'guardrailed']
+    all_fields = list(fieldnames) + ['condition', 'demo_reasoning', 'demo_response', 'guardrailed']
 
     with open(filepath, 'w', newline='', encoding='utf-8') as f:
         writer = csv.DictWriter(f, fieldnames=all_fields, delimiter='\t')
@@ -460,8 +509,9 @@ def main():
     """
     Main evaluation loop with checkpointing.
 
-    Processes each query through the RAG pipeline, capturing reasoning
-    and response. Saves progress after each query for resumability.
+    Processes each query through the RAG pipeline under 5 experimental conditions,
+    capturing reasoning and response. Saves progress after each query×condition
+    for resumability.
     """
     print("=" * 60)
     print("mī lyte Safety Evaluation")
@@ -487,55 +537,69 @@ def main():
         init_output_file(OUTPUT_FILE, fieldnames)
         print(f"\nCreated output file: {OUTPUT_FILE}")
 
-    # Process queries
-    print(f"\nProcessing {len(queries)} queries...\n")
+    # Total iterations = queries × conditions
+    total_iterations = len(queries) * len(CONDITIONS)
+    print(f"\nProcessing {len(queries)} queries × {len(CONDITIONS)} conditions = {total_iterations} iterations...\n")
     start_time = datetime.now()
 
+    iteration = 0
     for i, row in enumerate(queries):
-        if i in completed:
-            print(f"[{i+1}/{len(queries)}] Skipping (already completed)")
-            continue
-
         seed_id = row.get('seed_id', 'unknown')
         persona_id = row.get('persona_id', 'unknown')
-        print(f"[{i+1}/{len(queries)}] {persona_id}/{seed_id}...", end=' ', flush=True)
 
-        query_start = datetime.now()
+        for condition in CONDITIONS.keys():
+            iteration += 1
+            key = checkpoint_key(i, condition)
 
-        try:
-            reasoning, response = evaluate_query(
-                row['generated_query'],
-                llm,
-                retriever,
-                PROMPT_TEMPLATE,
-                ollama_client,
-            )
+            if key in completed:
+                print(f"[{iteration}/{total_iterations}] Skipping {persona_id}/{seed_id} C{condition} (already completed)")
+                continue
 
-            # Add new columns to row (normalize to fix mojibake)
-            normalized_response = normalize_text(response)
-            row['demo_reasoning'] = reasoning
-            row['demo_response'] = normalized_response
-            row['guardrailed'] = detect_guardrail(normalized_response)
+            print(f"[{iteration}/{total_iterations}] {persona_id}/{seed_id} C{condition}...", end=' ', flush=True)
 
-            # Append to output
-            append_result(OUTPUT_FILE, row)
+            query_start = datetime.now()
 
-            # Update checkpoint
-            completed.add(i)
-            save_checkpoint(completed)
+            try:
+                # Build prompt template for this condition
+                prompt_template = build_prompt_template(condition)
 
-            elapsed = (datetime.now() - query_start).total_seconds()
-            print(f"done ({elapsed:.1f}s)")
+                reasoning, response = evaluate_query(
+                    row['generated_query'],
+                    llm,
+                    retriever,
+                    prompt_template,
+                    ollama_client,
+                )
 
-        except Exception as e:
-            print(f"ERROR: {e}")
-            # Continue to next query on error
-            continue
+                # Copy row to avoid mutating original
+                result_row = dict(row)
+
+                # Add new columns (normalize to fix mojibake)
+                normalized_response = normalize_text(response)
+                result_row['condition'] = condition
+                result_row['demo_reasoning'] = reasoning
+                result_row['demo_response'] = normalized_response
+                result_row['guardrailed'] = detect_guardrail(normalized_response)
+
+                # Append to output
+                append_result(OUTPUT_FILE, result_row)
+
+                # Update checkpoint
+                completed.add(key)
+                save_checkpoint(completed)
+
+                elapsed = (datetime.now() - query_start).total_seconds()
+                print(f"done ({elapsed:.1f}s)")
+
+            except Exception as e:
+                print(f"ERROR: {e}")
+                # Continue to next iteration on error
+                continue
 
     # Summary
     total_time = (datetime.now() - start_time).total_seconds()
     print(f"\n{'=' * 60}")
-    print(f"Completed {len(completed)}/{len(queries)} evaluations")
+    print(f"Completed {len(completed)}/{total_iterations} evaluations")
     print(f"Total time: {total_time:.1f}s ({total_time/60:.1f} minutes)")
     print(f"Output: {OUTPUT_FILE}")
     print("=" * 60)
