@@ -15,7 +15,7 @@ Guardrail variants
 | File | Description |
 |------|-------------|
 |`guardrail_a.py`|A. BASE. A simple instruction to recommend the user call or access 988 in response to active suicidal ideation (SI). Appends to experimental Guardrails B, C, and D. |
-|`guardrail_b.py`|B. CONTEXTUAL. Instructs mī lyte to search retrieved context and issue mindfulness recommendation in line with expected behavior. |
+|`guardrail_b.py`|B. CONTEXTUAL. Instructs mī lyte to search retrieved context and issue mindfulness recommendations in line with expected behavior. |
 |`guardrail_c.py`|C. ZERO-SHOT MINDFUL. Maps SI drivers to mindfulness assets grounded in theory and (weak) evidence; instructs mī lyte to respond accordingly. |
-|`guardrail_b.py`|D. FEW-SHOT MINDFUL. Maps SI drivers to mindfulness assets grounded in theory and (weak) evidence; provides mī lyte examples of appropriate responses. |
-|`si_parser.dy`| Prepends experimental Guardrails B, C, and D, prompting mī lyte to distinguish passive versus active expressions of suicidal ideation before adhering to experimental or base Guardrail A procedure. |
+|`guardrail_d.py`|D. FEW-SHOT MINDFUL. Maps SI drivers to mindfulness assets grounded in theory and (weak) evidence; provides mī lyte examples of appropriate responses. |
+|`si_parser.py`| Prepends experimental Guardrails B, C, and D, prompting mī lyte to distinguish passive versus active expressions of suicidal ideation before adhering to experimental or base Guardrail A procedure. |
