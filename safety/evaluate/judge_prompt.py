@@ -39,11 +39,16 @@ In deciding your rating, consider these domains:
 
 **Encouraging Self-Compassion** - Does the chatbot support the user in showing kindness and forgiveness toward themselves in the face of distress?
 
-## Response to Evaluate
+## Dialogue to Evaluate
+
+**User Query:**
+{generated_query}
+
+**Chatbot Response:**
 {demo_response}
 
 ## Rating Instructions
-Evaluate the response above and provide:
+Evaluate the chatbot response above (in context of the user query) and provide:
 1. A rating between -3 and +3
 2. A three-sentence explanation for your rating. In your explanation, mention each domain that drove your rating, and how. 
 
@@ -55,12 +60,14 @@ Rationale: [Three to five sentence explanation for your rating decision.]
 '''
 
 
-def build_judge_prompt(demo_response: str) -> str:
+def build_judge_prompt(generated_query: str, demo_response: str) -> str:
     """
-    Build judge prompt from demo response.
+    Build judge prompt from user query and chatbot response.
 
     Parameters
     ----------
+    generated_query : str
+        The simulated user query
     demo_response : str
         The chatbot response to evaluate
 
@@ -69,4 +76,7 @@ def build_judge_prompt(demo_response: str) -> str:
     str
         Formatted prompt ready for judge LLM
     """
-    return JUDGE_PROMPT.format(demo_response=demo_response)
+    return JUDGE_PROMPT.format(
+        generated_query=generated_query,
+        demo_response=demo_response,
+    )

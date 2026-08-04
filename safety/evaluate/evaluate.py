@@ -338,6 +338,7 @@ def parse_judge_output(text: str) -> tuple[str, str]:
 
 
 def judge_response(
+    generated_query: str,
     demo_response: str,
     ollama_client,
     model: str = JUDGE_MODEL,
@@ -346,6 +347,7 @@ def judge_response(
     Evaluate a demo response using the judge LLM.
 
     Parameters:
+        generated_query: The simulated user query
         demo_response: The chatbot response to evaluate
         ollama_client: Native ollama.Client instance
         model: Judge model name
@@ -353,7 +355,7 @@ def judge_response(
     Returns:
         tuple: (model_judge, llm_rating, llm_rationale)
     """
-    prompt = build_judge_prompt(demo_response)
+    prompt = build_judge_prompt(generated_query, demo_response)
 
     response = ollama_client.chat(
         model=model,
@@ -469,6 +471,7 @@ def run_judge_evaluation(ollama_client):
 
         try:
             model_judge, llm_rating, llm_rationale = judge_response(
+                row['generated_query'],
                 row['demo_response'],
                 ollama_client,
             )
