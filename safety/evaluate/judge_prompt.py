@@ -5,7 +5,7 @@
 #   Prompt for LLM-as-judge evaluation of
 #   RAG chatbot responses.
 #
-#   Simone J. Skeen x Claude Code (08-03-2026)
+#   Simone J. Skeen (08-03-2026)
 #
 # ------------------------------------------------------ #
 

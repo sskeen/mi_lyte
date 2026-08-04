@@ -3,7 +3,7 @@
 #   guardrail_d.py
 #
 #   Guardrail for mī lyte System 1. D FEW-SHOT MINDFUL (+BASE)
-#   Simone J. Skeen x Claude Code (07-31-2026)
+#   Simone J. Skeen (08-04-2026)
 #
 # ------------------------------------------------------ #
 

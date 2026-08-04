@@ -3,7 +3,7 @@
 #   guardrail_b.py
 #
 #   Guardrail for mī lyte System 1. B CONTEXTUAL (+BASE)
-#   Simone J. Skeen x Claude Code (07-31-2026)
+#   Simone J. Skeen (07-31-2026)
 #
 # ------------------------------------------------------ #
 

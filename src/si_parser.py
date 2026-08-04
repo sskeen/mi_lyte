@@ -3,7 +3,7 @@
 #   si_parser.py
 #
 #   Prompt to parse passive versus active SI for mī lyte System 1 safety eval.
-#   Simone J. Skeen x Claude Code (06-25-2026)
+#   Simone J. Skeen (06-25-2026)
 #
 # ------------------------------------------------------ #
 
